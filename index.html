@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shamase Music Player</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Roboto+Mono:wght@300;400;500;700&family=Electrolize&family=Iceland&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        /* ====================== General Styles ====================== */
+        body {
+            font-family: sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #1a1a1a;
+            margin: 0;
+            overflow-x: hidden;
+            perspective: 1000px; /* For 3D hover effect */
+        }
+
+        /* ====================== Device Container ====================== */
+        .device-container {
+            width: clamp(300px, 90vw, 400px);
+            background: linear-gradient(145deg, #303030, #202020);
+            border-radius: 10px;
+            box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 8px rgba(50,50,50,0.3);
+            overflow: hidden;
+            transition: box-shadow 0.3s ease, transform 0.2s ease; /* Smooth transitions */
+            transform-style: preserve-3d; /* Enable 3D transforms */
+        }
+        .device-container:hover {
+            transform: scale(1.02) rotateY(2deg);
+            box-shadow: 10px 10px 20px rgba(0,0,0,0.7), -5px -5px 10px rgba(50,50,50,0.4)
+        }
+
+        /* ====================== Screen Styles ====================== */
+        .screen {
+             background: linear-gradient(to bottom, #111, #000);
+             height: clamp(120px, 35vw, 180px);
+            border-bottom: 1px solid #444;
+            position: relative;
+            box-sizing: border-box;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #ddd;
+            text-align: center;
+           font-size: clamp(1.3rem, 3vw, 2rem);
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+             transition: opacity 0.3s ease;
+
+        }
+         .screen::before {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            right: 5px;
+            bottom: 5px;
+            border: 1px solid #555;
+            border-radius: 3px;
+        }
+          .screen.faded {
+            opacity: 0.5;
+        }
+         /* Screen Content Wrapper */
+        .screen-content{
+              position: relative;
+              width: 100%;
+              height: 100%;
+                overflow: hidden;
+            display: flex;
+            justify-content: center;
+           align-items: center;
+        }
+         .screen-text{
+          position: relative;
+           font-style: italic;
+        }
+
+         .screen-text-inner{
+            opacity: 0;
+             transition: opacity 1s ease;
+           font-family: 'Electrolize', sans-serif;
+           transform-style: preserve-3d;
+             color: white;
+             white-space: nowrap;
+            overflow: hidden;
+             text-overflow: ellipsis;
+            max-width: 90%;
+        }
+          .screen-text-inner.active{
+               opacity: 1;
+          }
+        /* ====================== Playlist Styles ====================== */
+        .playlist-container {
+              position: relative;
+           width: 100%;
+          height: 100%;
+          overflow-y: auto; /* Make it scrollable */
+          padding: 10px;
+           display: none;
+        }
+       .playlist-container.active {
+              display: block;
+        }
+         .playlist-item {
+            padding: 5px;
+            cursor: pointer;
+            color: #ddd;
+           font-family: 'Electrolize', sans-serif;
+           transform-style: preserve-3d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+              max-width: 90%;
+        }
+         .playlist-item.active {
+           background-color: #333;
+           border-radius: 5px;
+          }
+         /* ====================== Controls Styles ====================== */
+        .controls {
+            padding: clamp(10px, 3vw, 20px);
+            display: flex;
+            flex-direction: column;
+            transform-style: preserve-3d;
+        }
+         .controls-row {
+           display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: clamp(5px, 2vw, 10px);
+             transform-style: preserve-3d;
+        }
+          .row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: clamp(5px, 2vw, 10px);
+            transform-style: preserve-3d;
+        }
+          .text-row {
+           display: flex;
+            justify-content: space-around;
+            align-items: center;
+             margin-bottom: clamp(5px, 2vw, 10px);
+            font-size: clamp(0.8rem, 2vw, 1.1rem);
+           font-family: 'Share Tech Mono', monospace;
+            transform-style: preserve-3d;
+            font-weight: bold;
+            color: white;
+        }
+        .label {
+            font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+            font-family: 'Share Tech Mono', monospace;
+           transform-style: preserve-3d;
+            font-weight: bold;
+            color: white;
+        }
+        /* ====================== Speaker Styles ====================== */
+        .speaker {
+           width: clamp(40px, 15vw, 60px);
+            height: clamp(40px, 15vw, 60px);
+             background-color: #444;
+            border-radius: 50%;
+             border: 2px solid #666;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            margin: 0px clamp(5px, 2vw, 10px);
+             box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5), 0px 0px 4px rgba(255,255,255, 0.2) ;
+             transition: transform 0.2s ease;
+            transform-style: preserve-3d;
+        }
+         .speaker:hover{
+            transform: scale(1.05) translateY(-2px);
+         }
+         .speaker::before {
+             content: '';
+            position: absolute;
+            width: clamp(25px, 10vw, 40px);
+             height: clamp(25px, 10vw, 40px);
+             border-radius: 50%;
+             background-color: #222;
+             box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5);
+             transition: transform 0.2s ease;
+            transform-style: preserve-3d;
+        }
+         .speaker:hover::before{
+           transform: scale(1.05) translateY(-1px);
+         }
+        .speaker::after {
+             content: '';
+           position: absolute;
+            width: clamp(5px, 3vw, 10px);
+            height: clamp(5px, 3vw, 10px);
+            border-radius: 50%;
+            background-color: #111;
+             box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease;
+             transform-style: preserve-3d;
+        }
+       .speaker:hover::after{
+           transform: scale(1.05) translateY(-1px);
+         }
+          .main-speaker {
+  width: clamp(80px, 40vw, 120px);
+  height: clamp(80px, 40vw, 120px);
+  background: radial-gradient(circle, #333 40%, #444 100%);
+  border-radius: 50%;
+  border: 3px solid #555;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin: 0px clamp(5px, 2vw, 10px);
+  box-shadow: 
+    inset 0px 0px 8px rgba(0, 0, 0, 0.8), 
+    inset 0px 0px 15px rgba(255, 255, 255, 0.1),
+    0px 4px 6px rgba(0, 0, 0, 0.4);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transform-style: preserve-3d;
+}
+
+.main-speaker:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 
+    inset 0px 0px 10px rgba(0, 0, 0, 0.9), 
+    0px 6px 10px rgba(0, 0, 0, 0.6);
+}
+
+.main-speaker::before {
+  content: '';
+  position: absolute;
+  width: clamp(35px, 15vw, 55px);
+  height: clamp(35px, 15vw, 55px);
+  border-radius: 50%;
+  background: radial-gradient(circle, #222 30%, #333 100%);
+  box-shadow: 
+    inset 0px 0px 6px rgba(0, 0, 0, 0.7), 
+    inset 0px 0px 10px rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease;
+  transform-style: preserve-3d;
+}
+
+.main-speaker:hover::before {
+  transform: scale(1.05) translateY(-1px);
+}
+
+.main-speaker::after {
+  content: '';
+  position: absolute;
+  width: clamp(12px, 5vw, 20px);
+  height: clamp(12px, 5vw, 20px);
+  border-radius: 50%;
+  background: radial-gradient(circle, #111 30%, #222 100%);
+  box-shadow: 
+    inset 0px 0px 8px rgba(0, 0, 0, 0.8), 
+    inset 0px 0px 4px rgba(255, 255, 255, 0.1);
+  transition: transform 0.2s ease;
+  transform-style: preserve-3d;
+}
+
+.main-speaker:hover::after {
+  transform: scale(1.05) translateY(-1px);
+}
+        /* ====================== Control Button Styles ====================== */
+         .control-button {
+            background-color: #444;
+            border: 1px solid #666;
+            width: clamp(15px, 5vw, 20px);
+            height: clamp(10px, 4vw, 15px);
+           border-radius: 3px;
+            cursor: pointer;
+            margin: 0px clamp(2px, 1vw, 3px);
+            transition: background-color 0.2s ease, transform 0.2s ease;
+           box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
+           transform-style: preserve-3d;
+              position: relative;
+        }
+         .control-button::before {
+          content: "";
+          position: absolute;
+            top: -2px;
+           left: -2px;
+          right: -2px;
+          bottom: -2px;
+            border: 1px solid #333;
+          border-radius: 3px;
+        }
+        .control-button:hover{
+             background-color: #555;
+             transform: scale(1.1) translateY(-1px);
+          }
+       .control-button-small {
+            background-color: #444;
+            border: 1px solid #666;
+            width: clamp(8px, 3vw, 10px);
+            height: clamp(8px, 3vw, 10px);
+            border-radius: 3px;
+            margin: 0px clamp(1px, 1vw, 3px);
+           cursor: pointer;
+             transition: background-color 0.2s ease, transform 0.2s ease;
+            box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
+            transform-style: preserve-3d;
+             position: relative;
+        }
+       .control-button-small::before {
+         content: "";
+         position: absolute;
+         top: -2px;
+           left: -2px;
+          right: -2px;
+         bottom: -2px;
+          border: 1px solid #333;
+         border-radius: 3px;
+        }
+         .control-button-small:hover{
+           background-color: #555;
+           transform: scale(1.1) translateY(-1px);
+         }
+        .control-button-rectangle {
+            background-color: #444;
+            border: 1px solid #666;
+            width: clamp(30px, 10vw, 40px);
+             height: clamp(10px, 4vw, 15px);
+            border-radius: 3px;
+            cursor: pointer;
+            margin: 0px clamp(2px, 1vw, 3px);
+             transition: background-color 0.2s ease, transform 0.2s ease;
+             box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
+            transform-style: preserve-3d;
+             position: relative;
+        }
+        .control-button-rectangle::before {
+           content: "";
+           position: absolute;
+            top: -2px;
+           left: -2px;
+          right: -2px;
+          bottom: -2px;
+          border: 1px solid #333;
+          border-radius: 3px;
+        }
+        .control-button-rectangle:hover{
+           background-color: #555;
+            transform: scale(1.1) translateY(-1px);
+         }
+          /* ====================== Equalizer Display Styles ====================== */
+        .equalizer-display {
+           background-color: #ffd700;
+           border: 1px solid #666;
+           width: clamp(80px, 30vw, 120px);
+           height: clamp(15px, 5vw, 20px);
+            text-align: center;
+           display: flex;
+            justify-content: center;
+            align-items: center;
+            color: black;
+            font-size: clamp(0.6rem, 2vw, 1rem);
+            margin: 0px clamp(5px, 2vw, 10px);
+           border-radius: 3px;
+            box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.4), inset 0px 0px 3px rgba(0, 0, 0, 0.1) ;
+           font-family: 'Iceland', sans-serif;
+           transform-style: preserve-3d;
+             position: relative;
+        }
+        .equalizer-display::before {
+           content: "";
+          position: absolute;
+            top: -1px;
+          left: -1px;
+            right: -1px;
+            bottom: -1px;
+           border: 1px solid #777;
+           border-radius: 3px;
+        }
+        /* ====================== Bottom Display Styles ====================== */
+        .bottom-display {
+           background-color: #ddd;
+           border: 1px solid #666;
+            width: clamp(80px, 30vw, 120px);
+            height: clamp(15px, 5vw, 20px);
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+           color: black;
+            font-size: clamp(0.6rem, 2vw, 1rem);
+            margin: 0px clamp(5px, 2vw, 10px);
+           border-radius: 3px;
+            box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.4), inset 0px 0px 3px rgba(0, 0, 0, 0.1);
+           font-family: 'Iceland', sans-serif;
+             transform-style: preserve-3d;
+             position: relative;
+        }
+       .bottom-display::before {
+         content: "";
+           position: absolute;
+          top: -1px;
+           left: -1px;
+           right: -1px;
+          bottom: -1px;
+           border: 1px solid #777;
+           border-radius: 3px;
+        }
+         /* ====================== Cassette Display Styles ====================== */
+       .cassette-display {
+           background-color: #111;
+            color: white;
+           padding: clamp(2px, 1vw, 5px);
+            text-align: center;
+            border-radius: 3px;
+             display: flex;
+             justify-content: center;
+            align-items: center;
+            margin-bottom: clamp(5px, 2vw, 10px);
+           font-family: 'Iceland', sans-serif;
+           transform-style: preserve-3d;
+            position: relative;
+            cursor: pointer; /* Added cursor for import action */
+        }
+       .cassette-display::before {
+           content: "";
+           position: absolute;
+          top: -1px;
+          left: -1px;
+          right: -1px;
+          bottom: -1px;
+          border: 1px solid #777;
+          border-radius: 3px;
+        }
+        .cassette-display img {
+             width: clamp(10px, 4vw, 15px);
+            height: clamp(10px, 4vw, 15px);
+           margin-right: clamp(2px, 1vw, 5px);
+        }
+          /* ====================== Cassette Import Animation ====================== */
+         .cassette-display.importing {
+            animation: shake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+           pointer-events: none; /* Prevent multiple clicks during import */
+        }
+        @keyframes shake {
+          10%, 90% {
+           transform: translate3d(-1px, 0, 0);
+         }
+
+        20%, 80% {
+             transform: translate3d(2px, 0, 0);
+          }
+
+        30%, 50%, 70% {
+             transform: translate3d(-4px, 0, 0);
+          }
+
+        40%, 60% {
+            transform: translate3d(4px, 0, 0);
+        }
+        }
+
+        /* ====================== Headphone/Mic Styles ====================== */
+         .headphones-mic-container {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: clamp(5px, 2vw, 10px);
+            padding: 0px clamp(10px, 5vw, 20px);
+             transform-style: preserve-3d;
+        }
+       .headphones-icon,
+        .mic-icon {
+            width: clamp(30px, 10vw, 40px);
+            height: clamp(30px, 10vw, 40px);
+             border-radius: 50%;
+             display: flex;
+            justify-content: center;
+            align-items: center;
+           position: relative;
+             margin: 0px clamp(5px, 2vw, 10px);
+             transition: transform 0.2s ease;
+           transform-style: preserve-3d;
+          cursor: pointer;
+        }
+       .headphones-icon:hover,
+        .mic-icon:hover{
+           transform: scale(1.05) translateY(-1px);
+        }
+
+        .headphones-icon::before,
+        .mic-icon::before{
+            content: '';
+            position: absolute;
+           top: 0;
+           left: 0;
+            width: 100%;
+           height: 100%;
+           background-size: 60%;
+           background-repeat: no-repeat;
+           background-position: center;
+           transition: transform 0.2s ease;
+           transform-style: preserve-3d;
+        }
+       .headphones-icon::before {
+           content: '';
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238a6600" stroke="%238a6600" stroke-width="1.5"><path d="M12 2c-5.52 0-10 4.48-10 10v6c0 1.1.9 2 2 2h2v-6h-2v-2c0-4.42 3.58-8 8-8s8 3.58 8 8v2h-2v6h2c1.1 0 2-.9 2-2v-6c0-5.52-4.48-10-10-10zm-4 12h-2v4h2v-4zm12 0h-2v4h2v-4z"/></svg>');
+    background-size: cover;
+}
+
+.mic-icon::before {
+    content: '';
+    display: inline-block;
+    width: 28px;
+    height: 28px;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238a6600" stroke="%238a6600" stroke-width="1.5"><path d="M12 14c1.66 0 3-1.34 3-3v-6c0-1.66-1.34-3-3-3s-3 1.34-3 3v6c0 1.66 1.34 3 3 3z"/><path d="M12 16c2.76 0 5-2.24 5-5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3h-2c0 2.76 2.24 5 5 5z"/><path d="M10 18h4v1c0 1.1-.9 2-2 2s-2-.9-2-2v-1z"/></svg>');
+    background-size: cover;
+}
+         /* ====================== Responsive Styles ====================== */
+        @media (max-width: 600px) {
+           .text-row {
+             font-size: 10px;
+           }
+           .label {
+             font-size: 9px;
+            }
+
+           .screen{
+            font-size: 15px;
+           }
+       }
+         /* ====================== Equalizer Knob Styles ====================== */
+       /* General Knob Styles */
+.equalizer-knob, .volume-knob {
+  background: radial-gradient(circle, #555 30%, #666 70%, #777 100%);
+  border: 3px solid #888;
+  width: clamp(40px, 15vw, 60px);
+  height: clamp(40px, 15vw, 60px);
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 0px clamp(5px, 2vw, 10px);
+  box-shadow: 
+    inset 0px 2px 6px rgba(0, 0, 0, 0.7), 
+    inset 0px -2px 4px rgba(255, 255, 255, 0.2),
+    0px 6px 12px rgba(0, 0, 0, 0.5);
+  cursor: pointer;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.equalizer-knob:hover, .volume-knob:hover {
+  transform: scale(1.05);
+  box-shadow: 
+    inset 0px 3px 8px rgba(0, 0, 0, 0.8), 
+    0px 8px 16px rgba(0, 0, 0, 0.7);
+}
+
+/* Inner Circle */
+.equalizer-knob::before, .volume-knob::before {
+  content: '';
+  position: absolute;
+  width: clamp(10px, 4vw, 15px);
+  height: clamp(10px, 4vw, 15px);
+  border-radius: 50%;
+  background: radial-gradient(circle, #222 20%, #333 80%);
+  box-shadow: 
+    inset 0px 2px 4px rgba(0, 0, 0, 0.8), 
+    inset 0px -1px 3px rgba(255, 255, 255, 0.1);
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+/* Pointer Indicator */
+.equalizer-knob::after, .volume-knob::after {
+  content: '';
+  position: absolute;
+  width: clamp(3px, 1.5vw, 5px);
+  height: clamp(15px, 7vw, 20px);
+  background: linear-gradient(180deg, #ddd 30%, #bbb 100%);
+  border-radius: 2px;
+  top: 20%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 
+    0px 2px 4px rgba(0, 0, 0, 0.5), 
+    inset 0px 0px 2px rgba(255, 255, 255, 0.5);
+}
+
+.equalizer-knob:hover::after, .volume-knob:hover::after {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+/* Volume Knob Specific */
+.volume-knob:hover {
+  transform: scale(1.05) rotate(-15deg);
+}
+         
+    </style>
+</head>
+<body>
+    <div class="device-container">
+         <div class="screen" >
+              <div class="screen-content">
+                    <div class="screen-text">
+                        <div class="screen-text-inner active">Now Playing</div>
+                       <div class="screen-text-inner">Artist</div>
+                        <div class="screen-text-inner">Album</div>
+                     </div>
+                    <div class="playlist-container">
+                        <!-- Playlist items will be added here dynamically -->
+                      </div>
+              </div>
+        </div>
+       <div class="controls">
+            <div class="row">
+                <div class="control-button" onclick="previousTrack()"></div>
+                 <div class="control-button" onclick="togglePlayPause()"></div>
+                <div class="control-button" onclick="nextTrack()"></div>
+                  <div class="control-button" onclick="toggleScreenOpacity()"></div>
+                <div class="control-button" onclick="toggleRecordMode()"></div>
+            </div>
+            <div class="text-row">
+                <div class="label">Prev</div>
+                <div class="label">Play</div>
+                 <div class="label">Next</div>
+                 <div class="label">Mode</div>
+                 <div class="label">Rec</div>
+            </div>
+             <div class="controls-row">
+                    <div class="control-button-small" onclick="setPreset(0)"></div>
+                     <div class="control-button-small" onclick="setPreset(1)"></div>
+                    <div class="control-button-small" onclick="setPreset(2)"></div>
+                    <div class="control-button-small" onclick="setPreset(3)"></div>
+                </div>
+             <div class="text-row">
+                   <div class="label">1</div>
+                    <div class="label">2</div>
+                    <div class="label">3</div>
+                  <div class="label">4</div>
+            </div>
+            <div class="row">
+                <div class="equalizer-knob" onclick="toggleEqualizerMode()"></div>
+                 <div class="equalizer-display" >EQ</div>
+                 <div class="volume-knob" onclick="incrementVolume()">00</div>
+            </div>
+           <div class="row">
+               <div class="label">Equalizer</div>
+                 <div class="label">Volume</div>
+            </div>
+            <div class="controls-row">
+                    <div class="control-button" onclick="adjustBass(-10)"></div>
+                   <div class="control-button" onclick="adjustMid(-10)"></div>
+                    <div class="control-button" onclick="adjustTreble(-10)"></div>
+                    <div class="control-button" onclick="adjustBalance(-10)"></div>
+           </div>
+            <div class="text-row">
+                 <div class="label">Bass</div>
+               <div class="label">Mid</div>
+                 <div class="label">Treble</div>
+                <div class="label">Balance</div>
+            </div>
+           <div class="row">
+               <div class="main-speaker"></div>
+           </div>
+           <div class="controls-row">
+               <div class="control-button" onclick="powerToggle()"></div>
+                                  <div class="control-button" onclick="menuToggle()"></div>
+                 <div class="control-button" onclick="setupToggle()"></div>
+           </div>
+            <div class="text-row">
+                <div class="label">Power</div>
+                 <div class="label">Menu</div>
+                <div class="label">Setup</div>
+           </div>
+           <div class="row">
+                <div class="bottom-display">00:00</div>
+            </div>
+             <div class="cassette-display" onclick="importMusic()">
+                <img src="cassette.jpg" alt="Cassette Icon">
+                   Insert cassette</div>
+             <input type="file" id="fileInput" accept="audio/*" style="display: none;" onchange="handleFile(event)"> <!-- Hidden file input -->
+           <div class="headphones-mic-container">
+                 <div class="headphones-icon" onclick="toggleHeadphones()"></div>
+                <div class="mic-icon" onclick="toggleMic()"></div>
+            </div>
+           <div class="text-row">
+                 <div class="label">Headphones</div>
+                 <div class="label">Microphone</div>
+            </div>
+       </div>
+    </div>
+    <script>
+       const screenTextInner = document.querySelectorAll(".screen-text-inner");
+          const bottomDisplay = document.querySelector('.bottom-display');
+          const eqDisplay = document.querySelector('.equalizer-display');
+          const playlistContainer = document.querySelector('.playlist-container');
+          const mainSpeaker = document.querySelector('.main-speaker');
+           const screen = document.querySelector('.screen');
+            const cassetteDisplay = document.querySelector('.cassette-display'); // Get cassette display element
+          let currentIndex = 0;
+           let isPlaying = false;
+           let currentTrackIndex = 0;
+                   let volume = 0;
+        const volumeDisplay = document.querySelector('.volume-knob');
+          let bassLevel = 0;
+          let midLevel = 0;
+           let trebleLevel = 0;
+            let balanceLevel = 0;
+            let equalizerMode = false;
+           let isRecordMode = false;
+        let isHeadphonesOn = false;
+        let isMicOn = false;
+          let powerOn = true;
+          let menuOpen = false;
+           let setupOpen = false;
+            let activeScreen = "nowPlaying";
+          let timerInterval;
+           let animationFrameId; // Store animation frame ID
+          let audio; // Declare audio variable
+           let audioContext;
+            let analyser;
+           let source;
+           let frequencyData;
+          let playlistRendered = false;
+            let tracks = [
+            { 
+                title: "Track 1", 
+                artist: "Artist A", 
+                album: "Album X", 
+                duration: 180,
+                audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3" // <- Replace with actual file path or make sure an audio file with the name is in same directory
+            },
+             { 
+                title: "Track 2", 
+                artist: "Artist B", 
+                album: "Album Y", 
+                duration: 240,
+                audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3"// <- Replace with actual file path or make sure an audio file with the name is in same directory
+            },
+            { 
+                title: "Track 3", 
+                artist: "Artist C", 
+                album: "Album Z", 
+                duration: 210,
+                audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3" // <- Replace with actual file path or make sure an audio file with the name is in same directory
+             },
+             {
+                title: "Tattoo",
+                artist: "Loreen",
+                album: "Singles",
+                duration: 192,
+                audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3"
+             }
+           ];
+    // Function to initialize audio context and analyser
+    function initializeAudioContext() {
+            try{
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                analyser = audioContext.createAnalyser();
+                analyser.fftSize = 2048;
+                frequencyData = new Uint8Array(analyser.frequencyBinCount); // Create frequency data array
+            } catch(e){
+              console.error("Error initializing audio context:", e);
+              audioContext = null;
+              analyser = null;
+            }
+
+    }
+
+    // Function to connect audio source to analyser
+    function connectAudioToAnalyser(){
+         if(audio && analyser){
+              try{
+                     source = audioContext.createMediaElementSource(audio); // Create audio source
+                   source.connect(analyser); // Connect source to analyser
+                     analyser.connect(audioContext.destination); // Connect analyser to audio output
+                   }catch(e){
+                    console.error("Error connecting audio to analyser:", e);
+                        source = null;
+                        }
+        }
+
+    }
+    function updateSpeakerAnimation() {
+        if (isPlaying && analyser && mainSpeaker) {
+            analyser.getByteFrequencyData(frequencyData);
+            let sum = 0;
+            for (let i = 0; i < frequencyData.length; i++) {
+             sum += frequencyData[i];
+            }
+             const average = sum / frequencyData.length;
+            const scale = 1 + (average / 255) * 0.15;
+             const rotation = (average / 255) * 5;
+
+            mainSpeaker.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
+        }
+        animationFrameId = requestAnimationFrame(updateSpeakerAnimation); // Loop animation
+    }
+
+      function stopSpeakerAnimation() {
+         if (animationFrameId) {
+             cancelAnimationFrame(animationFrameId);
+             animationFrameId = null;
+              if(mainSpeaker){
+                 mainSpeaker.style.transform = 'scale(1) rotate(0deg)'; // Reset when not playing
+               }
+         }
+    }
+
+          function cycleScreenText(index) {
+          screenTextInner.forEach((item, i) =>{
+              if (index == i)
+              {
+                  item.classList.add('active');
+
+              }else{
+                 item.classList.remove('active');
+              }
+         })
+      }
+     function toggleScreenOpacity() {
+        screen.classList.toggle('faded');
+    }
+
+     function incrementVolume() {
+      volume = (volume + 10) % 100;
+      updateVolumeDisplay();
+       if (audio) {
+            audio.volume = volume / 100; // Set volume on audio element (0 to 1)
+        }
+    }
+
+     function updateVolumeDisplay() {
+        volumeDisplay.textContent = String(volume).padStart(2, '0');
+    }
+       function updateBottomDisplay(time) {
+           const minutes = Math.floor(time / 60);
+           const seconds = time % 60;
+           bottomDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+    }
+        function startTimer() {
+            let time = 0;
+            updateBottomDisplay(time);
+          timerInterval = setInterval( () => {
+                if (isPlaying) {
+                    time++;
+                    updateBottomDisplay(time);
+                     if (time > tracks[currentTrackIndex].duration) {
+                         nextTrack();
+                        time = 0;
+                       updateBottomDisplay(time);
+                   }
+                }
+            }, 1000);
+        }
+
+       function stopTimer() {
+          clearInterval(timerInterval);
+        }
+
+         function togglePlayPause() {
+          if (powerOn) {
+               isPlaying = !isPlaying;
+            if (isPlaying) {
+                   if (!audio){
+                     loadAudio(); // Load audio if not already loaded
+                   }
+                  audio.play();
+                   if(audioContext){
+                      updateSpeakerAnimation();
+                    }
+                  startTimer();
+             } else {
+                 if(audio){
+                     audio.pause();
+                   }
+                    stopSpeakerAnimation();
+                 stopTimer();
+             }
+               if(activeScreen == "nowPlaying")
+               {
+                    cycleScreenText(0);
+               }
+
+           }
+         }
+
+       function loadAudio() {
+           if (!tracks[currentTrackIndex] || !tracks[currentTrackIndex].audioSrc) {
+                console.error("Error: No audio source for track", currentTrackIndex);
+                audio = null;
+                return;
+            }
+          try{
+                if(audio) {
+                 audio.pause();
+                audio.removeEventListener('ended', nextTrack); // Remove old listener
+            }
+               audio = new Audio(tracks[currentTrackIndex].audioSrc); // Create new audio object
+             audio.volume = volume / 100;
+                audio.addEventListener('ended', nextTrack); // Add listener for track end
+               audio.addEventListener('error', (e) => {
+                        console.error('Audio load error:', e);
+                        audio = null; //Reset audio to null when error happens
+                });
+                if (audioContext) {
+                    connectAudioToAnalyser(); // Connect the audio source to the analyser
+                }
+
+           }catch(e){
+               audio = null; //Set audio null if something goes wrong
+                console.error("Error loading audio:", e);
+           }
+
+        }
+
+
+          function nextTrack() {
+          if (powerOn) {
+            currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+            stopTimer();
+             stopSpeakerAnimation();
+            updateBottomDisplay(0);
+             loadAudio(); // Load audio
+            if (isPlaying) {
+                    audio.play();
+                    if (audioContext) {
+                       updateSpeakerAnimation();
+                   }
+                   startTimer();
+             }
+              updateNowPlaying();
+              updatePlaylistHighlight();
+          }
+        }
+         function previousTrack() {
+         if (powerOn) {
+             currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+           stopTimer();
+            stopSpeakerAnimation();
+            updateBottomDisplay(0);
+             loadAudio(); // Load audio
+            if (isPlaying) {
+                  audio.play();
+                    if (audioContext) {
+                      updateSpeakerAnimation();
+                    }
+                   startTimer();
+             }
+             updateNowPlaying();
+              updatePlaylistHighlight();
+            }
+        }
+    function updateNowPlaying() {
+            cycleScreenText(0);
+             if(activeScreen == "nowPlaying") {
+                 screenTextInner[0].textContent = tracks[currentTrackIndex].title;
+                screenTextInner[1].textContent = tracks[currentTrackIndex].artist;
+                screenTextInner[2].textContent = tracks[currentTrackIndex].album;
+               }
+    }
+    function setPreset(preset) {
+        if(powerOn) {
+            switch (preset) {
+                case 0:
+                    bassLevel = 10;
+                  midLevel = -5;
+                   trebleLevel = 5;
+                     updateEqDisplay()
+                   break;
+                case 1:
+                     bassLevel = -5;
+                    midLevel = 10;
+                   trebleLevel = -5;
+                    updateEqDisplay()
+                   break;
+                case 2:
+                    bassLevel = 5;
+                     midLevel = -5;
+                    trebleLevel = 10;
+                     updateEqDisplay()
+                    break;
+                 case 3:
+                      bassLevel = 0;
+                     midLevel = 0;
+                      trebleLevel = 0;
+                       updateEqDisplay()
+                   break;
+               }
+            }
+        }
+       function adjustBass(amount) {
+            if(powerOn && equalizerMode) {
+               bassLevel = Math.max(Math.min(bassLevel + amount, 20), -20);
+                updateEqDisplay()
+            }
+       }
+       function adjustMid(amount) {
+        if(powerOn && equalizerMode) {
+              midLevel = Math.max(Math.min(midLevel + amount, 20), -20);
+               updateEqDisplay()
+           }
+       }
+        function adjustTreble(amount) {
+           if(powerOn && equalizerMode) {
+             trebleLevel = Math.max(Math.min(trebleLevel + amount, 20), -20);
+                updateEqDisplay()
+            }
+        }
+    function adjustBalance(amount) {
+       if(powerOn && equalizerMode) {
+          balanceLevel = Math.max(Math.min(balanceLevel + amount, 10), -10);
+           updateEqDisplay()
+        }
+    }
+    function updateEqDisplay() {
+            eqDisplay.textContent = `B:${String(bassLevel).padStart(2, '0')} M:${String(midLevel).padStart(2, '0')} T:${String(trebleLevel).padStart(2, '0')} Bal:${String(balanceLevel).padStart(2, '0')}`;
+        }
+
+     function toggleEqualizerMode() {
+         if(powerOn) {
+            equalizerMode = !equalizerMode;
+            eqDisplay.textContent = equalizerMode ? 'EQ ON' : 'EQ OFF'
+         }
+        }
+
+     function toggleRecordMode() {
+            if(powerOn) {
+               isRecordMode = !isRecordMode;
+               if (isRecordMode) {
+                    screenTextInner[0].textContent = "Recording...";
+                    screenTextInner[1].textContent = "Rec Mode";
+                   screenTextInner[2].textContent = "";
+                    stopTimer()
+                    updateBottomDisplay(0);
+                    cycleScreenText(0)
+                } else {
+                   updateNowPlaying();
+                }
+              }
+       }
+
+       function toggleHeadphones() {
+         if(powerOn) {
+           isHeadphonesOn = !isHeadphonesOn;
+            console.log('Headphones ' + (isHeadphonesOn ? 'on' : 'off'));
+        }
+      }
+
+    function toggleMic() {
+        if(powerOn) {
+            isMicOn = !isMicOn;
+             console.log('Mic ' + (isMicOn ? 'on' : 'off'));
+        }
+   }
+    function powerToggle() {
+        powerOn = !powerOn;
+        if(!powerOn)
+        {
+            isPlaying = false;
+           if (audio) {
+                audio.pause();
+            }
+            stopTimer();
+            stopSpeakerAnimation();
+           updateBottomDisplay(0)
+           screen.classList.remove('faded')
+             if(activeScreen == "nowPlaying")
+             {
+                 cycleScreenText(0)
+                 screenTextInner[0].textContent = "Power Off";
+                screenTextInner[1].textContent = "";
+               screenTextInner[2].textContent = "";
+           }
+        }else {
+            updateNowPlaying()
+           updateVolumeDisplay()
+            if (isPlaying && audio) {
+                   audio.play();
+                   if (audioContext) {
+                       updateSpeakerAnimation();
+                   }
+                   startTimer();
+             }
+        }
+    }
+     function menuToggle() {
+        if (powerOn) {
+             menuOpen = !menuOpen;
+             setupOpen = false; // Ensure only one screen is active
+             toggleActiveScreen(menuOpen ? "playlist" : "nowPlaying");
+         }
+    }
+
+    function setupToggle() {
+         if (powerOn) {
+            setupOpen = !setupOpen;
+             menuOpen = false;  // Ensure only one screen is active
+           toggleActiveScreen(setupOpen ? "setup" : "nowPlaying");
+         }
+    }
+
+     function toggleActiveScreen(screenName){
+           activeScreen = screenName
+          screenTextInner[0].textContent = "";
+          screenTextInner[1].textContent = "";
+          screenTextInner[2].textContent = "";
+           if(screenName == "nowPlaying") {
+              playlistContainer.classList.remove('active');
+                updateNowPlaying();
+          } else if(screenName == "playlist") {
+                 renderPlaylist();
+               playlistContainer.classList.add('active');
+             cycleScreenText(0); // reset the text to "now playing"
+             screenTextInner[0].textContent = "Choose a track"
+         }else if (screenName == "setup"){
+              playlistContainer.classList.remove('active');
+             screenTextInner[0].textContent = "Setup Menu";
+            screenTextInner[1].textContent = "Settings";
+             screenTextInner[2].textContent = "";
+         }
+     }
+
+
+  function renderPlaylist() {
+        if (playlistRendered) return; // Prevent re-rendering if already done
+        playlistContainer.innerHTML = ''; // Clear existing playlist
+        tracks.forEach((track, index) => {
+            const item = document.createElement('div');
+            item.classList.add('playlist-item');
+            item.textContent = track.title;
+            item.addEventListener('click', () => selectTrack(index));
+            playlistContainer.appendChild(item);
+        });
+        playlistRendered = true;
+    }
+
+    function selectTrack(index) {
+        if (powerOn) {
+             currentTrackIndex = index;
+             stopTimer();
+             stopSpeakerAnimation();
+            updateBottomDisplay(0)
+             loadAudio();
+              if (isPlaying) {
+                    audio.play();
+                    if(audioContext) {
+                       updateSpeakerAnimation();
+                     }
+                   startTimer();
+              }
+               updateNowPlaying();
+             updatePlaylistHighlight();
+         }
+    }
+
+    function updatePlaylistHighlight() {
+        const playlistItems = document.querySelectorAll('.playlist-item');
+        playlistItems.forEach((item, index) => {
+            if (index === currentTrackIndex) {
+                item.classList.add('active');
+            } else {
+                item.classList.remove('active');
+            }
+        });
+    }
+
+  // Function to handle cassette click animation and file import
+    function importMusic() {
+        if (powerOn) {
+            cassetteDisplay.classList.add('importing'); // Start animation
+            document.getElementById('fileInput').click(); // Programmatically click the hidden file input
+             setTimeout(() => { // Remove animation class after it finishes
+                cassetteDisplay.classList.remove('importing');
+           }, 800); //Animation time
+         }
+
+    }
+  function handleFile(event) {
+         const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+              const newTrack = {
+                  title: file.name,
+                    artist: "Unknown",
+                    album: "Unknown",
+                    duration: 300,
+                    audioSrc: e.target.result
+                };
+               tracks.push(newTrack);
+               if (menuOpen && activeScreen == "playlist"){
+                renderPlaylist()
+               }
+            };
+            reader.readAsDataURL(file);
+       }
+    }
+
+    //Initialize on page load
+   initializeAudioContext();
+   updateNowPlaying()
+   updateEqDisplay()
+   updatePlaylistHighlight()
+</script>
+</body>
+</html>
