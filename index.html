@@ -18,42 +18,57 @@
             background-color: #1a1a1a;
             margin: 0;
             overflow-x: hidden;
-            perspective: 1000px; /* For 3D hover effect */
+            perspective: 1000px;
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
         }
-
-        /* ====================== Device Container ====================== */
+          /* ====================== Device Container ====================== */
         .device-container {
-            width: clamp(300px, 90vw, 400px);
-            background: linear-gradient(145deg, #303030, #202020);
-            border-radius: 10px;
+            width: clamp(300px, 90vw, 500px);
+             padding: 30px;
+             background: linear-gradient(145deg, #303030, #202020);
+            border-radius: 15px;
             box-shadow: 8px 8px 16px rgba(0,0,0,0.6), -4px -4px 8px rgba(50,50,50,0.3);
             overflow: hidden;
-            transition: box-shadow 0.3s ease, transform 0.2s ease; /* Smooth transitions */
-            transform-style: preserve-3d; /* Enable 3D transforms */
+            transition: box-shadow 0.3s ease, transform 0.2s ease;
+             transform-style: preserve-3d;
+             position: relative;
         }
+
+        .device-container::before {
+           content: '';
+           position: absolute;
+           top: 10px;
+           left: 10px;
+           right: 10px;
+           bottom: 10px;
+           border: 1px solid #444;
+           border-radius: 13px;
+            z-index: -1;
+        }
+
         .device-container:hover {
             transform: scale(1.02) rotateY(2deg);
             box-shadow: 10px 10px 20px rgba(0,0,0,0.7), -5px -5px 10px rgba(50,50,50,0.4)
         }
-
-        /* ====================== Screen Styles ====================== */
-        .screen {
-             background: linear-gradient(to bottom, #111, #000);
-             height: clamp(120px, 35vw, 180px);
+         /* ====================== Main Screen Styles ====================== */
+         .screen {
+            background: linear-gradient(to bottom, #222, #000);
+           height: clamp(120px, 35vw, 180px);
             border-bottom: 1px solid #444;
-            position: relative;
-            box-sizing: border-box;
+             position: relative;
+             box-sizing: border-box;
             display: flex;
             justify-content: center;
-            align-items: center;
-            color: #ddd;
+             align-items: center;
+             color: #ddd;
             text-align: center;
-           font-size: clamp(1.3rem, 3vw, 2rem);
+             font-size: clamp(1.3rem, 3vw, 2rem);
             font-weight: bold;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
             overflow: hidden;
-             transition: opacity 0.3s ease;
-
+            transition: opacity 0.3s ease;
+           border-radius: 8px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.4) ; /* Added inset shadow */
         }
          .screen::before {
             content: '';
@@ -63,554 +78,933 @@
             right: 5px;
             bottom: 5px;
             border: 1px solid #555;
-            border-radius: 3px;
+             border-radius: 3px;
+         }
+         .screen.faded {
+          opacity: 0.5;
         }
-          .screen.faded {
-            opacity: 0.5;
-        }
-         /* Screen Content Wrapper */
         .screen-content{
-              position: relative;
-              width: 100%;
-              height: 100%;
-                overflow: hidden;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             display: flex;
-            justify-content: center;
+             justify-content: center;
            align-items: center;
         }
          .screen-text{
-          position: relative;
-           font-style: italic;
+             position: relative;
+             font-style: italic;
         }
 
-         .screen-text-inner{
-            opacity: 0;
-             transition: opacity 1s ease;
-           font-family: 'Electrolize', sans-serif;
-           transform-style: preserve-3d;
+        .screen-text-inner{
+           opacity: 0;
+            transition: opacity 1s ease;
+             font-family: 'Electrolize', sans-serif;
+             transform-style: preserve-3d;
              color: white;
-             white-space: nowrap;
-            overflow: hidden;
-             text-overflow: ellipsis;
-            max-width: 90%;
-        }
-          .screen-text-inner.active{
-               opacity: 1;
-          }
-        /* ====================== Playlist Styles ====================== */
+            white-space: nowrap;
+             overflow: hidden;
+            text-overflow: ellipsis;
+             max-width: 90%;
+             font-size: clamp(1rem, 2.5vw, 1.5rem)
+         }
+       .screen-text-inner.active{
+             opacity: 1;
+       }
+
+           /* Placeholder Screen Graphics */
+           .screen::after {
+            content: '';
+            position: absolute;
+             top: 20px;
+             left: 20px;
+           right: 20px;
+             bottom: 20px;
+           background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 50" fill="none" stroke="#444"><path d="M10,25 h80 m-80,-10 l20,10 l20,-15 l20,20 l20,-5 m-80,10 l20,-5 l20,10 l20,-10 l20,15 " stroke-width="1.5"/></svg>') no-repeat center/cover;
+           opacity: 0.2; /* Subtle waveform */
+         }
+         /* ====================== Playlist Styles ====================== */
         .playlist-container {
               position: relative;
            width: 100%;
           height: 100%;
-          overflow-y: auto; /* Make it scrollable */
+             overflow-y: auto;
           padding: 10px;
-           display: none;
+             display: none;
         }
        .playlist-container.active {
               display: block;
         }
-         .playlist-item {
+        .playlist-item {
             padding: 5px;
             cursor: pointer;
-            color: #ddd;
-           font-family: 'Electrolize', sans-serif;
-           transform-style: preserve-3d;
-            white-space: nowrap;
-            overflow: hidden;
+             color: #ddd;
+            font-family: 'Electrolize', sans-serif;
+             transform-style: preserve-3d;
+           white-space: nowrap;
+           overflow: hidden;
             text-overflow: ellipsis;
-              max-width: 90%;
+             max-width: 90%;
         }
          .playlist-item.active {
            background-color: #333;
-           border-radius: 5px;
-          }
-         /* ====================== Controls Styles ====================== */
-        .controls {
+            border-radius: 5px;
+         }
+        /* ====================== Controls Styles ====================== */
+       .controls {
             padding: clamp(10px, 3vw, 20px);
-            display: flex;
-            flex-direction: column;
+             display: flex;
+           flex-direction: column;
             transform-style: preserve-3d;
         }
-         .controls-row {
+          .controls-row {
            display: flex;
-            justify-content: space-around;
-            align-items: center;
+           justify-content: space-around;
+           align-items: center;
             margin-bottom: clamp(5px, 2vw, 10px);
              transform-style: preserve-3d;
         }
-          .row {
+        .row {
             display: flex;
-            justify-content: space-around;
-            align-items: center;
-            margin-bottom: clamp(5px, 2vw, 10px);
-            transform-style: preserve-3d;
-        }
-          .text-row {
-           display: flex;
-            justify-content: space-around;
+           justify-content: space-around;
             align-items: center;
              margin-bottom: clamp(5px, 2vw, 10px);
-            font-size: clamp(0.8rem, 2vw, 1.1rem);
-           font-family: 'Share Tech Mono', monospace;
-            transform-style: preserve-3d;
-            font-weight: bold;
-            color: white;
+             transform-style: preserve-3d;
         }
-        .label {
-            font-size: clamp(0.7rem, 1.8vw, 0.9rem);
-            font-family: 'Share Tech Mono', monospace;
-           transform-style: preserve-3d;
-            font-weight: bold;
-            color: white;
-        }
-        /* ====================== Speaker Styles ====================== */
-        .speaker {
-           width: clamp(40px, 15vw, 60px);
-            height: clamp(40px, 15vw, 60px);
-             background-color: #444;
-            border-radius: 50%;
-             border: 2px solid #666;
+          .text-row {
             display: flex;
-            justify-content: center;
+             justify-content: space-around;
             align-items: center;
-            position: relative;
-            margin: 0px clamp(5px, 2vw, 10px);
-             box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5), 0px 0px 4px rgba(255,255,255, 0.2) ;
-             transition: transform 0.2s ease;
+             margin-bottom: clamp(5px, 2vw, 10px);
+             font-size: clamp(0.8rem, 2vw, 1.1rem);
+            font-family: 'Share Tech Mono', monospace;
+            transform-style: preserve-3d;
+            font-weight: bold;
+             color: white;
+       }
+        .label {
+           font-size: clamp(0.7rem, 1.8vw, 0.9rem);
+             font-family: 'Share Tech Mono', monospace;
+            transform-style: preserve-3d;
+            font-weight: bold;
+            color: white;
+        }
+          /* ====================== Speaker Styles ====================== */
+        .speaker {
+            width: clamp(40px, 15vw, 60px);
+             height: clamp(40px, 15vw, 60px);
+             background-color: #444;
+             border-radius: 50%;
+            border: 2px solid #666;
+             display: flex;
+           justify-content: center;
+             align-items: center;
+           position: relative;
+             margin: 0px clamp(5px, 2vw, 10px);
+              box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5), 0px 0px 4px rgba(255,255,255, 0.2) ;
+           transition: transform 0.2s ease;
             transform-style: preserve-3d;
         }
-         .speaker:hover{
-            transform: scale(1.05) translateY(-2px);
-         }
-         .speaker::before {
+       .speaker:hover{
+          transform: scale(1.05) translateY(-2px);
+       }
+        .speaker::before {
              content: '';
-            position: absolute;
+             position: absolute;
             width: clamp(25px, 10vw, 40px);
              height: clamp(25px, 10vw, 40px);
              border-radius: 50%;
-             background-color: #222;
-             box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5);
-             transition: transform 0.2s ease;
+            background-color: #222;
+            box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5);
+           transition: transform 0.2s ease;
             transform-style: preserve-3d;
         }
-         .speaker:hover::before{
+       .speaker:hover::before{
            transform: scale(1.05) translateY(-1px);
-         }
-        .speaker::after {
-             content: '';
-           position: absolute;
-            width: clamp(5px, 3vw, 10px);
+        }
+       .speaker::after {
+            content: '';
+             position: absolute;
+             width: clamp(5px, 3vw, 10px);
             height: clamp(5px, 3vw, 10px);
             border-radius: 50%;
-            background-color: #111;
+             background-color: #111;
              box-shadow: inset 0px 0px 5px rgba(0, 0, 0, 0.5);
             transition: transform 0.2s ease;
-             transform-style: preserve-3d;
+            transform-style: preserve-3d;
         }
        .speaker:hover::after{
-           transform: scale(1.05) translateY(-1px);
-         }
-          .main-speaker {
-  width: clamp(80px, 40vw, 120px);
-  height: clamp(80px, 40vw, 120px);
-  background: radial-gradient(circle, #333 40%, #444 100%);
-  border-radius: 50%;
-  border: 3px solid #555;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
-  margin: 0px clamp(5px, 2vw, 10px);
-  box-shadow: 
-    inset 0px 0px 8px rgba(0, 0, 0, 0.8), 
-    inset 0px 0px 15px rgba(255, 255, 255, 0.1),
-    0px 4px 6px rgba(0, 0, 0, 0.4);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  transform-style: preserve-3d;
-}
-
-.main-speaker:hover {
-  transform: scale(1.05) translateY(-2px);
-  box-shadow: 
-    inset 0px 0px 10px rgba(0, 0, 0, 0.9), 
-    0px 6px 10px rgba(0, 0, 0, 0.6);
-}
-
-.main-speaker::before {
-  content: '';
-  position: absolute;
-  width: clamp(35px, 15vw, 55px);
-  height: clamp(35px, 15vw, 55px);
-  border-radius: 50%;
-  background: radial-gradient(circle, #222 30%, #333 100%);
-  box-shadow: 
-    inset 0px 0px 6px rgba(0, 0, 0, 0.7), 
-    inset 0px 0px 10px rgba(255, 255, 255, 0.1);
-  transition: transform 0.2s ease;
-  transform-style: preserve-3d;
-}
-
-.main-speaker:hover::before {
-  transform: scale(1.05) translateY(-1px);
-}
-
-.main-speaker::after {
-  content: '';
-  position: absolute;
-  width: clamp(12px, 5vw, 20px);
-  height: clamp(12px, 5vw, 20px);
-  border-radius: 50%;
-  background: radial-gradient(circle, #111 30%, #222 100%);
-  box-shadow: 
-    inset 0px 0px 8px rgba(0, 0, 0, 0.8), 
-    inset 0px 0px 4px rgba(255, 255, 255, 0.1);
-  transition: transform 0.2s ease;
-  transform-style: preserve-3d;
-}
-
-.main-speaker:hover::after {
-  transform: scale(1.05) translateY(-1px);
-}
-        /* ====================== Control Button Styles ====================== */
-         .control-button {
-            background-color: #444;
-            border: 1px solid #666;
-            width: clamp(15px, 5vw, 20px);
-            height: clamp(10px, 4vw, 15px);
-           border-radius: 3px;
-            cursor: pointer;
-            margin: 0px clamp(2px, 1vw, 3px);
-            transition: background-color 0.2s ease, transform 0.2s ease;
-           box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
-           transform-style: preserve-3d;
-              position: relative;
+          transform: scale(1.05) translateY(-1px);
         }
-         .control-button::before {
+         /* Large Circular Speaker */
+     .main-speaker {
+        width: clamp(80px, 40vw, 120px);
+        height: clamp(80px, 40vw, 120px);
+         background: radial-gradient(circle, #333 40%, #444 100%);
+        border-radius: 50%;
+        border: 3px solid #555;
+        display: flex;
+         justify-content: center;
+         align-items: center;
+         position: relative;
+        margin: 0px clamp(5px, 2vw, 10px);
+         box-shadow:
+           inset 0px 0px 8px rgba(0, 0, 0, 0.8),
+          inset 0px 0px 15px rgba(255, 255, 255, 0.1),
+           0px 4px 6px rgba(0, 0, 0, 0.4);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transform-style: preserve-3d;
+     }
+
+     .main-speaker:hover {
+       transform: scale(1.05) translateY(-2px);
+        box-shadow:
+          inset 0px 0px 10px rgba(0, 0, 0, 0.9),
+           0px 6px 10px rgba(0, 0, 0, 0.6);
+    }
+
+    .main-speaker::before {
+        content: '';
+         position: absolute;
+        width: clamp(35px, 15vw, 55px);
+       height: clamp(35px, 15vw, 55px);
+        border-radius: 50%;
+        background: radial-gradient(circle, #222 30%, #333 100%);
+         box-shadow:
+           inset 0px 0px 6px rgba(0, 0, 0, 0.7),
+          inset 0px 0px 10px rgba(255, 255, 255, 0.1);
+        transition: transform 0.2s ease;
+        transform-style: preserve-3d;
+   }
+
+    .main-speaker:hover::before {
+        transform: scale(1.05) translateY(-1px);
+    }
+
+    .main-speaker::after {
+         content: '';
+        position: absolute;
+       width: clamp(12px, 5vw, 20px);
+        height: clamp(12px, 5vw, 20px);
+        border-radius: 50%;
+        background: radial-gradient(circle, #111 30%, #222 100%);
+         box-shadow:
+          inset 0px 0px 8px rgba(0, 0, 0, 0.8),
+            inset 0px 0px 4px rgba(255, 255, 255, 0.1);
+         transition: transform 0.2s ease;
+         transform-style: preserve-3d;
+   }
+    .main-speaker:hover::after {
+        transform: scale(1.05) translateY(-1px);
+   }
+         /* ====================== Control Button Styles ====================== */
+      .control-button {
+          background-color: #444;
+          border: 1px solid #666;
+          width: clamp(25px, 15vw, 30px);
+          height: clamp(15px, 9vw, 20px);
+         border-radius: 3px;
+         cursor: pointer;
+          margin: 0px clamp(2px, 1vw, 3px);
+         transition: background-color 0.2s ease, transform 0.2s ease;
+           box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
+          transform-style: preserve-3d;
+            position: relative;
+   }
+      .control-button::before {
           content: "";
           position: absolute;
-            top: -2px;
-           left: -2px;
+          top: -2px;
+          left: -2px;
           right: -2px;
           bottom: -2px;
-            border: 1px solid #333;
-          border-radius: 3px;
-        }
-        .control-button:hover{
-             background-color: #555;
-             transform: scale(1.1) translateY(-1px);
-          }
-       .control-button-small {
-            background-color: #444;
-            border: 1px solid #666;
-            width: clamp(8px, 3vw, 10px);
-            height: clamp(8px, 3vw, 10px);
-            border-radius: 3px;
-            margin: 0px clamp(1px, 1vw, 3px);
-           cursor: pointer;
-             transition: background-color 0.2s ease, transform 0.2s ease;
-            box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
-            transform-style: preserve-3d;
-             position: relative;
-        }
-       .control-button-small::before {
-         content: "";
-         position: absolute;
-         top: -2px;
-           left: -2px;
-          right: -2px;
-         bottom: -2px;
-          border: 1px solid #333;
+           border: 1px solid #333;
          border-radius: 3px;
         }
-         .control-button-small:hover{
-           background-color: #555;
+      .control-button:hover{
+          background-color: #555;
            transform: scale(1.1) translateY(-1px);
-         }
-        .control-button-rectangle {
-            background-color: #444;
-            border: 1px solid #666;
-            width: clamp(30px, 10vw, 40px);
-             height: clamp(10px, 4vw, 15px);
-            border-radius: 3px;
-            cursor: pointer;
-            margin: 0px clamp(2px, 1vw, 3px);
-             transition: background-color 0.2s ease, transform 0.2s ease;
-             box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
-            transform-style: preserve-3d;
-             position: relative;
-        }
-        .control-button-rectangle::before {
-           content: "";
-           position: absolute;
-            top: -2px;
-           left: -2px;
+     }
+     .control-button-small {
+          background-color: #444;
+          border: 1px solid #666;
+        width: clamp(3px, .6vw, 4px);
+         height: clamp(3px, .6vw, 4px);
+         border-radius: 3px;
+         margin: 0px clamp(1px, 1vw, 3px);
+        cursor: pointer;
+          transition: background-color 0.2s ease, transform 0.2s ease;
+         box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
+         transform-style: preserve-3d;
+            position: relative;
+   }
+      .control-button-small::before {
+         content: "";
+          position: absolute;
+          top: -2px;
+          left: -2px;
           right: -2px;
           bottom: -2px;
           border: 1px solid #333;
-          border-radius: 3px;
-        }
-        .control-button-rectangle:hover{
-           background-color: #555;
-            transform: scale(1.1) translateY(-1px);
-         }
-          /* ====================== Equalizer Display Styles ====================== */
-        .equalizer-display {
-           background-color: #ffd700;
+        border-radius: 3px;
+   }
+      .control-button-small:hover{
+        background-color: #555;
+         transform: scale(1.1) translateY(-1px);
+   }
+       .control-button-rectangle {
+          background-color: #444;
            border: 1px solid #666;
-           width: clamp(80px, 30vw, 120px);
-           height: clamp(15px, 5vw, 20px);
-            text-align: center;
-           display: flex;
-            justify-content: center;
-            align-items: center;
-            color: black;
-            font-size: clamp(0.6rem, 2vw, 1rem);
-            margin: 0px clamp(5px, 2vw, 10px);
-           border-radius: 3px;
-            box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.4), inset 0px 0px 3px rgba(0, 0, 0, 0.1) ;
-           font-family: 'Iceland', sans-serif;
+           width: clamp(30px, 10vw, 40px);
+           height: clamp(10px, 4vw, 15px);
+         border-radius: 3px;
+           cursor: pointer;
+          margin: 0px clamp(2px, 1vw, 3px);
+           transition: background-color 0.2s ease, transform 0.2s ease;
+           box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
            transform-style: preserve-3d;
              position: relative;
-        }
-        .equalizer-display::before {
-           content: "";
-          position: absolute;
-            top: -1px;
-          left: -1px;
-            right: -1px;
-            bottom: -1px;
-           border: 1px solid #777;
-           border-radius: 3px;
-        }
-        /* ====================== Bottom Display Styles ====================== */
-        .bottom-display {
-           background-color: #ddd;
-           border: 1px solid #666;
-            width: clamp(80px, 30vw, 120px);
-            height: clamp(15px, 5vw, 20px);
-            text-align: center;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-           color: black;
-            font-size: clamp(0.6rem, 2vw, 1rem);
-            margin: 0px clamp(5px, 2vw, 10px);
-           border-radius: 3px;
-            box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.4), inset 0px 0px 3px rgba(0, 0, 0, 0.1);
-           font-family: 'Iceland', sans-serif;
-             transform-style: preserve-3d;
-             position: relative;
-        }
-       .bottom-display::before {
+    }
+      .control-button-rectangle::before {
          content: "";
+          position: absolute;
+          top: -2px;
+          left: -2px;
+          right: -2px;
+          bottom: -2px;
+          border: 1px solid #333;
+        border-radius: 3px;
+   }
+      .control-button-rectangle:hover{
+        background-color: #555;
+         transform: scale(1.1) translateY(-1px);
+    }
+
+        /* ====================== Equalizer Display Styles ====================== */
+       .equalizer-display {
+          background-color: #ffd700;
+           border: 1px solid #666;
+           width: clamp(80px, 30vw, 120px);
+         height: clamp(15px, 5vw, 20px);
+           text-align: center;
+           display: flex;
+           justify-content: center;
+            align-items: center;
+             color: black;
+           font-size: clamp(0.6rem, 2vw, 1rem);
+            margin: 0px clamp(5px, 2vw, 10px);
+            border-radius: 3px;
+           box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.4), inset 0px 0px 3px rgba(0, 0, 0, 0.1) ;
+            font-family: 'Iceland', sans-serif;
+            transform-style: preserve-3d;
+            position: relative;
+       }
+        .equalizer-display::before {
+          content: "";
            position: absolute;
-          top: -1px;
+           top: -1px;
            left: -1px;
            right: -1px;
           bottom: -1px;
-           border: 1px solid #777;
+          border: 1px solid #777;
+         border-radius: 3px;
+      }
+         /* ====================== Bottom Display Styles ====================== */
+     .bottom-display {
+          background-color: #ddd;
+           border: 1px solid #666;
+           width: clamp(80px, 30vw, 120px);
+         height: clamp(15px, 5vw, 20px);
+            text-align: center;
+             display: flex;
+           justify-content: center;
+           align-items: center;
+             color: black;
+            font-size: clamp(0.6rem, 2vw, 1rem);
+            margin: 0px clamp(5px, 2vw, 10px);
            border-radius: 3px;
+          box-shadow: 0px 0px 3px rgba(0, 0, 0, 0.4), inset 0px 0px 3px rgba(0, 0, 0, 0.1);
+            font-family: 'Iceland', sans-serif;
+           transform-style: preserve-3d;
+            position: relative;
         }
+      .bottom-display::before {
+        content: "";
+         position: absolute;
+         top: -1px;
+          left: -1px;
+          right: -1px;
+         bottom: -1px;
+          border: 1px solid #777;
+         border-radius: 3px;
+     }
+
          /* ====================== Cassette Display Styles ====================== */
-       .cassette-display {
+      .cassette-display {
            background-color: #111;
-            color: white;
+         color: white;
            padding: clamp(2px, 1vw, 5px);
             text-align: center;
             border-radius: 3px;
-             display: flex;
+           display: flex;
              justify-content: center;
             align-items: center;
-            margin-bottom: clamp(5px, 2vw, 10px);
+             margin-bottom: clamp(5px, 2vw, 10px);
            font-family: 'Iceland', sans-serif;
-           transform-style: preserve-3d;
-            position: relative;
-            cursor: pointer; /* Added cursor for import action */
+            transform-style: preserve-3d;
+           position: relative;
+             cursor: pointer;
         }
        .cassette-display::before {
            content: "";
            position: absolute;
-          top: -1px;
-          left: -1px;
-          right: -1px;
-          bottom: -1px;
+           top: -1px;
+           left: -1px;
+           right: -1px;
+           bottom: -1px;
           border: 1px solid #777;
-          border-radius: 3px;
-        }
-        .cassette-display img {
-             width: clamp(10px, 4vw, 15px);
-            height: clamp(10px, 4vw, 15px);
+           border-radius: 3px;
+       }
+      .cassette-display img {
+         width: clamp(10px, 4vw, 15px);
+         height: clamp(10px, 4vw, 15px);
            margin-right: clamp(2px, 1vw, 5px);
         }
           /* ====================== Cassette Import Animation ====================== */
          .cassette-display.importing {
             animation: shake 0.8s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
-           pointer-events: none; /* Prevent multiple clicks during import */
-        }
-        @keyframes shake {
-          10%, 90% {
+           pointer-events: none;
+     }
+     @keyframes shake {
+         10%, 90% {
            transform: translate3d(-1px, 0, 0);
          }
 
-        20%, 80% {
-             transform: translate3d(2px, 0, 0);
-          }
+         20%, 80% {
+           transform: translate3d(2px, 0, 0);
+        }
 
         30%, 50%, 70% {
-             transform: translate3d(-4px, 0, 0);
-          }
+            transform: translate3d(-4px, 0, 0);
+         }
 
         40%, 60% {
             transform: translate3d(4px, 0, 0);
         }
-        }
+       }
 
         /* ====================== Headphone/Mic Styles ====================== */
          .headphones-mic-container {
             display: flex;
-            justify-content: space-around;
+             justify-content: space-around;
             align-items: center;
             margin-bottom: clamp(5px, 2vw, 10px);
-            padding: 0px clamp(10px, 5vw, 20px);
+           padding: 0px clamp(10px, 5vw, 20px);
              transform-style: preserve-3d;
         }
        .headphones-icon,
-        .mic-icon {
+      .mic-icon {
             width: clamp(30px, 10vw, 40px);
             height: clamp(30px, 10vw, 40px);
-             border-radius: 50%;
-             display: flex;
+            border-radius: 50%;
+            display: flex;
             justify-content: center;
             align-items: center;
-           position: relative;
+            position: relative;
              margin: 0px clamp(5px, 2vw, 10px);
              transition: transform 0.2s ease;
            transform-style: preserve-3d;
-          cursor: pointer;
+           cursor: pointer;
         }
        .headphones-icon:hover,
         .mic-icon:hover{
-           transform: scale(1.05) translateY(-1px);
-        }
+          transform: scale(1.05) translateY(-1px);
+       }
 
-        .headphones-icon::before,
-        .mic-icon::before{
-            content: '';
-            position: absolute;
-           top: 0;
-           left: 0;
-            width: 100%;
-           height: 100%;
+       .headphones-icon::before,
+       .mic-icon::before{
+          content: '';
+           position: absolute;
+            top: 0;
+            left: 0;
+          width: 100%;
+            height: 100%;
            background-size: 60%;
-           background-repeat: no-repeat;
+          background-repeat: no-repeat;
            background-position: center;
            transition: transform 0.2s ease;
            transform-style: preserve-3d;
-        }
-       .headphones-icon::before {
+      }
+     .headphones-icon::before {
            content: '';
-    display: inline-block;
-    width: 28px;
-    height: 28px;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238a6600" stroke="%238a6600" stroke-width="1.5"><path d="M12 2c-5.52 0-10 4.48-10 10v6c0 1.1.9 2 2 2h2v-6h-2v-2c0-4.42 3.58-8 8-8s8 3.58 8 8v2h-2v6h2c1.1 0 2-.9 2-2v-6c0-5.52-4.48-10-10-10zm-4 12h-2v4h2v-4zm12 0h-2v4h2v-4z"/></svg>');
-    background-size: cover;
-}
+        display: inline-block;
+         width: 28px;
+         height: 28px;
+           background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238a6600" stroke="%238a6600" stroke-width="1.5"><path d="M12 2c-5.52 0-10 4.48-10 10v6c0 1.1.9 2 2 2h2v-6h-2v-2c0-4.42 3.58-8 8-8s8 3.58 8 8v2h-2v6h2c1.1 0 2-.9 2-2v-6c0-5.52-4.48-10-10-10zm-4 12h-2v4h2v-4zm12 0h-2v4h2v-4z"/></svg>');
+         background-size: cover;
+   }
 
-.mic-icon::before {
-    content: '';
-    display: inline-block;
-    width: 28px;
-    height: 28px;
-    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238a6600" stroke="%238a6600" stroke-width="1.5"><path d="M12 14c1.66 0 3-1.34 3-3v-6c0-1.66-1.34-3-3-3s-3 1.34-3 3v6c0 1.66 1.34 3 3 3z"/><path d="M12 16c2.76 0 5-2.24 5-5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3h-2c0 2.76 2.24 5 5 5z"/><path d="M10 18h4v1c0 1.1-.9 2-2 2s-2-.9-2-2v-1z"/></svg>');
-    background-size: cover;
-}
-         /* ====================== Responsive Styles ====================== */
-        @media (max-width: 600px) {
-           .text-row {
-             font-size: 10px;
-           }
-           .label {
+    .mic-icon::before {
+         content: '';
+         display: inline-block;
+         width: 28px;
+        height: 28px;
+       background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%238a6600" stroke="%238a6600" stroke-width="1.5"><path d="M12 14c1.66 0 3-1.34 3-3v-6c0-1.66-1.34-3-3-3s-3 1.34-3 3v6c0 1.66 1.34 3 3 3z"/><path d="M12 16c2.76 0 5-2.24 5-5h-2c0 1.66-1.34 3-3 3s-3-1.34-3-3h-2c0 2.76 2.24 5 5 5z"/><path d="M10 18h4v1c0 1.1-.9 2-2 2s-2-.9-2-2v-1z"/></svg>');
+       background-size: cover;
+   }
+          /* ====================== Responsive Styles ====================== */
+       @media (max-width: 600px) {
+         .text-row {
+           font-size: 10px;
+          }
+          .label {
              font-size: 9px;
-            }
+          }
 
-           .screen{
+         .screen{
             font-size: 15px;
-           }
-       }
+         }
+      }
          /* ====================== Equalizer Knob Styles ====================== */
-       /* General Knob Styles */
 .equalizer-knob, .volume-knob {
-  background: radial-gradient(circle, #555 30%, #666 70%, #777 100%);
-  border: 3px solid #888;
+   background: radial-gradient(circle, #555 30%, #666 70%, #777 100%);
+    border: 3px solid #888;
   width: clamp(40px, 15vw, 60px);
-  height: clamp(40px, 15vw, 60px);
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 0px clamp(5px, 2vw, 10px);
-  box-shadow: 
-    inset 0px 2px 6px rgba(0, 0, 0, 0.7), 
-    inset 0px -2px 4px rgba(255, 255, 255, 0.2),
-    0px 6px 12px rgba(0, 0, 0, 0.5);
+    height: clamp(40px, 15vw, 60px);
+    border-radius: 50%;
+   display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0px clamp(5px, 2vw, 10px);
+    box-shadow:
+       inset 0px 2px 6px rgba(0, 0, 0, 0.7),
+      inset 0px -2px 4px rgba(255, 255, 255, 0.2),
+      0px 6px 12px rgba(0, 0, 0, 0.5);
   cursor: pointer;
   position: relative;
-  transform-style: preserve-3d;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transform-style: preserve-3d;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
 .equalizer-knob:hover, .volume-knob:hover {
-  transform: scale(1.05);
-  box-shadow: 
-    inset 0px 3px 8px rgba(0, 0, 0, 0.8), 
+    transform: scale(1.05);
+    box-shadow:
+    inset 0px 3px 8px rgba(0, 0, 0, 0.8),
     0px 8px 16px rgba(0, 0, 0, 0.7);
+ }
+
+  /* Inner Circle */
+  .equalizer-knob::before, .volume-knob::before {
+     content: '';
+    position: absolute;
+     width: clamp(10px, 4vw, 15px);
+    height: clamp(10px, 4vw, 15px);
+     border-radius: 50%;
+    background: radial-gradient(circle, #222 20%, #333 80%);
+    box-shadow:
+      inset 0px 2px 4px rgba(0, 0, 0, 0.8),
+      inset 0px -1px 3px rgba(255, 255, 255, 0.1);
+     top: 50%;
+    left: 50%;
+     transform: translate(-50%, -50%);
 }
 
-/* Inner Circle */
-.equalizer-knob::before, .volume-knob::before {
-  content: '';
-  position: absolute;
-  width: clamp(10px, 4vw, 15px);
-  height: clamp(10px, 4vw, 15px);
-  border-radius: 50%;
-  background: radial-gradient(circle, #222 20%, #333 80%);
-  box-shadow: 
-    inset 0px 2px 4px rgba(0, 0, 0, 0.8), 
-    inset 0px -1px 3px rgba(255, 255, 255, 0.1);
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-}
-
-/* Pointer Indicator */
+   /* Pointer Indicator */
 .equalizer-knob::after, .volume-knob::after {
+     content: '';
+    position: absolute;
+    width: clamp(3px, 1.5vw, 5px);
+   height: clamp(15px, 7vw, 20px);
+     background: linear-gradient(180deg, #ddd 30%, #bbb 100%);
+   border-radius: 2px;
+    top: 20%;
+    left: 50%;
+     transform: translate(-50%, -50%);
+   box-shadow:
+    0px 2px 4px rgba(0, 0, 0, 0.5),
+     inset 0px 0px 2px rgba(255, 255, 255, 0.5);
+ }
+
+.equalizer-knob:hover::after, .volume-knob:hover::after {
+    transform: translate(-50%, -50%) rotate(45deg);
+}
+  .equalizer-knob {
+       background: radial-gradient(circle, #444 30%, #555 70%, #666 100%);
+    border: 3px solid #777;
+ }
+
+  /* Volume Knob Specific */
+ .volume-knob:hover {
+    transform: scale(1.05) rotate(-15deg);
+}
+    /* ====================== Screen Display ====================== */
+.screen {
+    position: relative;
+    background: linear-gradient(to bottom, #222, #000);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5), 0 2px 5px rgba(0, 0, 0, 0.4);
+}
+
+.screen::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border: 1px solid #555;
+    border-radius: 3px;
+}
+/*  Recessed border */
+.screen-container {
+    position: relative;
+    padding: 10px;
+}
+.screen-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border: 2px solid #444;
+    border-radius: 10px;
+    box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.4);
+  }
+/* ====================== Metallic borders and details ====================== */
+.metallic-border {
+   position: relative;
+    border: 1px solid #555;
+    border-radius: 5px;
+}
+.metallic-border::before{
+    content: '';
+   position: absolute;
+    top: -2px;
+     left: -2px;
+    right: -2px;
+   bottom: -2px;
+    border: 1px solid #777;
+    border-radius: 3px;
+    z-index: -1;}
+
+.device-container .metallic-border {
+   padding: 10px;
+}
+.control-button.metallic-border {
+     padding: 0px;
+}
+
+ /* ====================== Bolted borders and details ====================== */
+.bolted-border {
+    position: relative;
+    border: 1px solid #666;
+    border-radius: 8px;
+}
+
+.bolted-border::before {
+    content: '';
+    position: absolute;
+    top: -3px;
+    left: -3px;
+    right: -3px;
+    bottom: -3px;
+    border: 1px solid #444;
+    border-radius: 10px;
+}
+
+
+.bolted-border::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border: 1px solid #777;
+    border-radius: 8px;
+     z-index: -2;
+}
+
+
+.bolt {
+    position: absolute;
+    width: 6px;
+    height: 6px;
+    background-color: #777;
+    border-radius: 50%;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    border: 1px solid #888;
+}
+
+/* Position the bolts */
+.bolted-border .bolt.top-left {
+    top: 5px;
+    left: 5px;
+}
+
+.bolted-border .bolt.top-right {
+    top: 5px;
+    right: 5px;
+}
+
+.bolted-border .bolt.bottom-left {
+    bottom: 5px;
+    left: 5px;
+}
+
+.bolted-border .bolt.bottom-right {
+    bottom: 5px;
+    right: 5px;
+}
+ /* ====================== LED Indicator Styles ====================== */
+.led-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: #333;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    margin: 0 2px;
+    display: inline-block; /* Keep them on same line*/
+    position: relative;
+}
+ .led-indicator.on {
+    background-color: #ff6a00;
+    box-shadow: 0 0 4px 1px #ff6a00;
+}
+.led-indicator::before {
   content: '';
-  position: absolute;
-  width: clamp(3px, 1.5vw, 5px);
-  height: clamp(15px, 7vw, 20px);
-  background: linear-gradient(180deg, #ddd 30%, #bbb 100%);
-  border-radius: 2px;
-  top: 20%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  box-shadow: 
-    0px 2px 4px rgba(0, 0, 0, 0.5), 
-    inset 0px 0px 2px rgba(255, 255, 255, 0.5);
+   position: absolute;
+   top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+  border: 1px solid #444;
+  border-radius: 50%;
+}
+     /* ====================== Toggle Switch Styles ====================== */
+     .toggle-switch {
+            width: clamp(30px, 8vw, 40px);
+            height: clamp(15px, 4vw, 20px);
+             background-color: #444;
+             border: 1px solid #666;
+            border-radius: 5px;
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+          transition: background-color 0.2s ease;
+           box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
+           transform-style: preserve-3d;
+        }
+        .toggle-switch.on{
+            background-color: #555;
+         }
+          .toggle-switch::before {
+           content: "";
+             position: absolute;
+             top: -2px;
+            left: -2px;
+             right: -2px;
+             bottom: -2px;
+             border: 1px solid #333;
+            border-radius: 5px;
+           }
+       .toggle-switch-handle {
+             width: clamp(12px, 3vw, 18px);
+            height: clamp(12px, 3vw, 18px);
+             background-color: #777;
+             border-radius: 3px;
+             position: absolute;
+            left: 2px;
+             transition: left 0.2s ease;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3), 0px 0px 1px rgba(255,255,255, 0.1);
+        }
+       .toggle-switch.on .toggle-switch-handle {
+             left: calc(100% -  clamp(14px, 3.5vw, 20px));
+        }
+       .toggle-switch-handle::before {
+             content: "";
+             position: absolute;
+             top: -1px;
+            left: -1px;
+            right: -1px;
+            bottom: -1px;
+             border: 1px solid #888;
+            border-radius: 3px;
+        }
+       /* ====================== Cassette Slot Styles ====================== */
+    .cassette-slot {
+    position: relative;
+    background-color: #111;
+    border: 1px solid #444;
+    border-radius: 4px;
+    padding: 8px 10px; /* Added padding */
+    margin: 5px 0; /* Added margin */
+    box-shadow: inset 0px 0px 4px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3); /* Added shadow for depth */
+    }
+    .cassette-slot::before {
+       content: '';
+       position: absolute;
+        top: 0px;
+        left: 0px;
+        right: 0px;
+        bottom: 0px;
+       border: 1px solid #777;
+        border-radius: 3px;
+    }
+ .cassette-slot .slot-cover {
+    position: absolute;
+   top: 4px;
+  left: 4px;
+    right: 4px;
+    bottom: 4px;
+     background-color: rgba(20, 20, 20, 0.8); /* Reduced opacity */
+   border-radius: 3px;
+      border: 1px solid #444;
+    pointer-events: none; /* Ensure cover doesn't block click */
+     z-index: 1;
+  }
+   .cassette-slot .slot-cover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+     left: 0;
+   right: 0;
+     bottom: 0;
+    border: 1px solid #666;
+    border-radius: 2px;
+    }
+.cassette-eject-button {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+   transform: translateY(-50%);
+   width: 18px;
+   height: 18px;
+   background-color: #555;
+  border: 1px solid #666;
+  border-radius: 3px;
+  cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
+}
+.cassette-eject-button::before{
+   content: "";
+     position: absolute;
+     top: -2px;
+   left: -2px;
+    right: -2px;
+   bottom: -2px;
+     border: 1px solid #333;
+    border-radius: 3px;
+    }
+
+.cassette-eject-button:active {
+  transform: translateY(calc(-50% + 2px));
+  background-color: #444;
+    box-shadow: inset 0 2px 3px rgba(0, 0, 0, 0.4), 0px 0px 1px rgba(255,255,255, 0.1);
+}
+    /* ====================== Custom Knob Styles ====================== */
+
+.equalizer-knob, .volume-knob {
+    background: radial-gradient(circle, #444 30%, #555 70%, #666 100%);
+    border: 2px solid #777;
+    width: clamp(40px, 15vw, 60px);
+    height: clamp(40px, 15vw, 60px);
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0px clamp(5px, 2vw, 10px);
+    box-shadow:
+        inset 0px 1px 4px rgba(0, 0, 0, 0.6),
+        inset 0px -1px 3px rgba(255, 255, 255, 0.2),
+        0px 4px 8px rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.equalizer-knob:hover, .volume-knob:hover {
+    transform: scale(1.05);
+    box-shadow:
+        inset 0px 2px 6px rgba(0, 0, 0, 0.7),
+        0px 6px 12px rgba(0, 0, 0, 0.6);
+}
+
+.equalizer-knob::before, .volume-knob::before {
+    content: '';
+    position: absolute;
+    width: clamp(8px, 3vw, 12px);
+    height: clamp(8px, 3vw, 12px);
+    border-radius: 50%;
+    background: radial-gradient(circle, #222 20%, #333 80%);
+    box-shadow:
+        inset 0px 1px 3px rgba(0, 0, 0, 0.7),
+        inset 0px -1px 2px rgba(255, 255, 255, 0.1);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.equalizer-knob::after, .volume-knob::after {
+    content: '';
+    position: absolute;
+    width: clamp(2px, 1vw, 4px);
+    height: clamp(12px, 5vw, 16px);
+    background: linear-gradient(180deg, #ddd 30%, #bbb 100%);
+    border-radius: 1px;
+    top: 20%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+     box-shadow:
+        0px 1px 3px rgba(0, 0, 0, 0.4),
+        inset 0px 0px 1px rgba(255, 255, 255, 0.3);
 }
 
 .equalizer-knob:hover::after, .volume-knob:hover::after {
-  transform: translate(-50%, -50%) rotate(45deg);
+     transform: translate(-50%, -50%) rotate(45deg);
 }
 
-/* Volume Knob Specific */
+/* Specific styling for volume knob */
 .volume-knob:hover {
-  transform: scale(1.05) rotate(-15deg);
+    transform: scale(1.05) rotate(-15deg);
 }
-         
+.preset-indicator{
+   width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #333;
+    box-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    margin: 0 2px;
+    display: inline-block; /* Keep them on same line*/
+    position: absolute;
+    top: -8px;
+    left: 50%;
+     transform: translateX(-50%);
+}
+.preset-indicator.on {
+    background-color: #ff6a00;
+    box-shadow: 0 0 4px 1px #ff6a00;
+}
+
+.control-button-small {
+    position: relative; /* Add position relative to allow absolute positioning of indicator*/
+}
+
+.control-button-small.on .preset-indicator {
+    background-color: #ff6a00;
+     box-shadow: 0 0 4px 1px #ff6a00;
+}
     </style>
 </head>
 <body>
     <div class="device-container">
+       <div class="screen-container">
          <div class="screen" >
               <div class="screen-content">
                     <div class="screen-text">
@@ -623,77 +1017,94 @@
                       </div>
               </div>
         </div>
+       </div>
        <div class="controls">
             <div class="row">
-                <div class="control-button" onclick="previousTrack()"></div>
-                 <div class="control-button" onclick="togglePlayPause()"></div>
-                <div class="control-button" onclick="nextTrack()"></div>
-                  <div class="control-button" onclick="toggleScreenOpacity()"></div>
-                <div class="control-button" onclick="toggleRecordMode()"></div>
+                <div class="control-button metallic-border" onclick="previousTrack()"><div class="led-indicator"></div></div>
+                 <div class="control-button metallic-border" onclick="togglePlayPause()"><div class="led-indicator"></div></div>
+                <div class="control-button metallic-border" onclick="nextTrack()"><div class="led-indicator"></div></div>
+                  <div class="control-button metallic-border" onclick="toggleScreenOpacity()"><div class="led-indicator"></div></div>
+                 <div class="control-button metallic-border" onclick="toggleRecordMode()"><div class="led-indicator"></div></div>
             </div>
             <div class="text-row">
                 <div class="label">Prev</div>
                 <div class="label">Play</div>
                  <div class="label">Next</div>
                  <div class="label">Mode</div>
-                 <div class="label">Rec</div>
+                <div class="label">Rec</div>
             </div>
              <div class="controls-row">
-                    <div class="control-button-small" onclick="setPreset(0)"></div>
-                     <div class="control-button-small" onclick="setPreset(1)"></div>
-                    <div class="control-button-small" onclick="setPreset(2)"></div>
-                    <div class="control-button-small" onclick="setPreset(3)"></div>
+                    <div class="control-button-small metallic-border" onclick="setPreset(0)"><div class="preset-indicator"></div></div>
+                     <div class="control-button-small metallic-border" onclick="setPreset(1)"><div class="preset-indicator"></div></div>
+                    <div class="control-button-small metallic-border" onclick="setPreset(2)"><div class="preset-indicator"></div></div>
+                    <div class="control-button-small metallic-border" onclick="setPreset(3)"><div class="preset-indicator"></div></div>
                 </div>
              <div class="text-row">
                    <div class="label">1</div>
-                    <div class="label">2</div>
+                   <div class="label">2</div>
                     <div class="label">3</div>
                   <div class="label">4</div>
             </div>
-            <div class="row">
-                <div class="equalizer-knob" onclick="toggleEqualizerMode()"></div>
+             <div class="row">
+                                <div class="equalizer-knob" onclick="toggleEqualizerMode()"></div>
                  <div class="equalizer-display" >EQ</div>
-                 <div class="volume-knob" onclick="incrementVolume()">00</div>
+                <div class="volume-knob" onclick="incrementVolume()">00</div>
             </div>
            <div class="row">
-               <div class="label">Equalizer</div>
+              <div class="label">Equalizer</div>
                  <div class="label">Volume</div>
             </div>
             <div class="controls-row">
-                    <div class="control-button" onclick="adjustBass(-10)"></div>
-                   <div class="control-button" onclick="adjustMid(-10)"></div>
-                    <div class="control-button" onclick="adjustTreble(-10)"></div>
-                    <div class="control-button" onclick="adjustBalance(-10)"></div>
+                    <div class="control-button metallic-border" onclick="adjustBass(-10)"><div class="led-indicator"></div></div>
+                   <div class="control-button metallic-border" onclick="adjustMid(-10)"><div class="led-indicator"></div></div>
+                    <div class="control-button metallic-border" onclick="adjustTreble(-10)"><div class="led-indicator"></div></div>
+                    <div class="control-button metallic-border" onclick="adjustBalance(-10)"><div class="led-indicator"></div></div>
            </div>
             <div class="text-row">
                  <div class="label">Bass</div>
                <div class="label">Mid</div>
-                 <div class="label">Treble</div>
-                <div class="label">Balance</div>
+                <div class="label">Treble</div>
+                 <div class="label">Balance</div>
             </div>
            <div class="row">
-               <div class="main-speaker"></div>
+               <div class="main-speaker bolted-border">
+                    <div class="bolt top-left"></div>
+                   <div class="bolt top-right"></div>
+                   <div class="bolt bottom-left"></div>
+                   <div class="bolt bottom-right"></div>
+               </div>
            </div>
            <div class="controls-row">
-               <div class="control-button" onclick="powerToggle()"></div>
-                                  <div class="control-button" onclick="menuToggle()"></div>
-                 <div class="control-button" onclick="setupToggle()"></div>
+             <div class="toggle-switch" onclick="powerToggle()">
+               <div class="toggle-switch-handle"></div>
+                </div>
+                <div class="toggle-switch" onclick="menuToggle()">
+                   <div class="toggle-switch-handle"></div>
+                 </div>
+                <div class="toggle-switch" onclick="setupToggle()">
+                    <div class="toggle-switch-handle"></div>
+                </div>
            </div>
             <div class="text-row">
-                <div class="label">Power</div>
-                 <div class="label">Menu</div>
-                <div class="label">Setup</div>
+                 <div class="label">Power</div>
+                <div class="label">Menu</div>
+                 <div class="label">Setup</div>
            </div>
            <div class="row">
-                <div class="bottom-display">00:00</div>
+                <div class="bottom-display metallic-border">00:00</div>
             </div>
-             <div class="cassette-display" onclick="importMusic()">
+              <div class="cassette-display metallic-border" onclick="importMusic()">
                 <img src="cassette.jpg" alt="Cassette Icon">
-                   Insert cassette</div>
+                  Insert cassette
+             </div>
+             <div class="cassette-slot">
+                <div class="slot-cover"></div>
+                   <div class="cassette-eject-button"></div>
+             </div>
              <input type="file" id="fileInput" accept="audio/*" style="display: none;" onchange="handleFile(event)"> <!-- Hidden file input -->
            <div class="headphones-mic-container">
                  <div class="headphones-icon" onclick="toggleHeadphones()"></div>
-                <div class="mic-icon" onclick="toggleMic()"></div>
+               <div class="mic-icon" onclick="toggleMic()"></div>
             </div>
            <div class="text-row">
                  <div class="label">Headphones</div>
@@ -709,6 +1120,11 @@
           const mainSpeaker = document.querySelector('.main-speaker');
            const screen = document.querySelector('.screen');
             const cassetteDisplay = document.querySelector('.cassette-display'); // Get cassette display element
+          const playButton = document.querySelector('.control-button:nth-child(2)');
+          const recButton = document.querySelector('.control-button:nth-child(5)');
+           const powerSwitch = document.querySelector('.toggle-switch:nth-child(1)')
+           const menuSwitch = document.querySelector('.toggle-switch:nth-child(2)')
+          const setupSwitch = document.querySelector('.toggle-switch:nth-child(3)')
           let currentIndex = 0;
            let isPlaying = false;
            let currentTrackIndex = 0;
@@ -734,25 +1150,26 @@
            let source;
            let frequencyData;
           let playlistRendered = false;
+           let currentTimerTime = 0; // Track the timer time to make more reliable
             let tracks = [
-            { 
-                title: "Track 1", 
-                artist: "Artist A", 
-                album: "Album X", 
+            {
+                title: "Track 1",
+                artist: "Artist A",
+                album: "Album X",
                 duration: 180,
                 audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3" // <- Replace with actual file path or make sure an audio file with the name is in same directory
             },
-             { 
-                title: "Track 2", 
-                artist: "Artist B", 
-                album: "Album Y", 
+             {
+                title: "Track 2",
+                artist: "Artist B",
+                album: "Album Y",
                 duration: 240,
                 audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3"// <- Replace with actual file path or make sure an audio file with the name is in same directory
             },
-            { 
-                title: "Track 3", 
-                artist: "Artist C", 
-                album: "Album Z", 
+            {
+                title: "Track 3",
+                artist: "Artist C",
+                album: "Album Z",
                 duration: 210,
                 audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3" // <- Replace with actual file path or make sure an audio file with the name is in same directory
              },
@@ -764,6 +1181,12 @@
                 audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3"
              }
            ];
+      // Function to trigger haptic feedback (if supported)
+        function triggerHapticFeedback() {
+          if (navigator.vibrate) {
+            navigator.vibrate(50); // Vibrate for 50 milliseconds
+           }
+        }
     // Function to initialize audio context and analyser
     function initializeAudioContext() {
             try{
@@ -793,29 +1216,33 @@
         }
 
     }
-    function updateSpeakerAnimation() {
-        if (isPlaying && analyser && mainSpeaker) {
+     function applySpeakerAnimation(scale, rotation) {
+       if (mainSpeaker) {
+        mainSpeaker.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
+       }
+    }
+        function updateSpeakerAnimation() {
+        if (isPlaying && analyser) {
             analyser.getByteFrequencyData(frequencyData);
             let sum = 0;
             for (let i = 0; i < frequencyData.length; i++) {
              sum += frequencyData[i];
             }
              const average = sum / frequencyData.length;
-            const scale = 1 + (average / 255) * 0.15;
+              const scale = 1 + (average / 255) * 0.15;
              const rotation = (average / 255) * 5;
-
-            mainSpeaker.style.transform = `scale(${scale}) rotate(${rotation}deg)`;
-        }
-        animationFrameId = requestAnimationFrame(updateSpeakerAnimation); // Loop animation
+             applySpeakerAnimation(scale, rotation);
+           } else {
+                applySpeakerAnimation(1, 0); //Reset
+           }
+          animationFrameId = requestAnimationFrame(updateSpeakerAnimation); // Loop animation
     }
 
       function stopSpeakerAnimation() {
          if (animationFrameId) {
              cancelAnimationFrame(animationFrameId);
              animationFrameId = null;
-              if(mainSpeaker){
-                 mainSpeaker.style.transform = 'scale(1) rotate(0deg)'; // Reset when not playing
-               }
+              applySpeakerAnimation(1, 0); // Reset
          }
     }
 
@@ -832,6 +1259,7 @@
       }
      function toggleScreenOpacity() {
         screen.classList.toggle('faded');
+          triggerHapticFeedback();
     }
 
      function incrementVolume() {
@@ -839,6 +1267,7 @@
       updateVolumeDisplay();
        if (audio) {
             audio.volume = volume / 100; // Set volume on audio element (0 to 1)
+             triggerHapticFeedback();
         }
     }
 
@@ -851,16 +1280,16 @@
            bottomDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
     }
         function startTimer() {
-            let time = 0;
-            updateBottomDisplay(time);
+             currentTimerTime = 0; // Reset the current timer time.
+            updateBottomDisplay(currentTimerTime); //Initial display
           timerInterval = setInterval( () => {
                 if (isPlaying) {
-                    time++;
-                    updateBottomDisplay(time);
-                     if (time > tracks[currentTrackIndex].duration) {
+                    currentTimerTime++;
+                    updateBottomDisplay(currentTimerTime);
+                     if (currentTimerTime > tracks[currentTrackIndex].duration) {
                          nextTrack();
-                        time = 0;
-                       updateBottomDisplay(time);
+                         currentTimerTime = 0; //Reset timer
+                        updateBottomDisplay(currentTimerTime);
                    }
                 }
             }, 1000);
@@ -873,6 +1302,7 @@
          function togglePlayPause() {
           if (powerOn) {
                isPlaying = !isPlaying;
+               triggerHapticFeedback(); // Added haptic feedback
             if (isPlaying) {
                    if (!audio){
                      loadAudio(); // Load audio if not already loaded
@@ -882,12 +1312,14 @@
                       updateSpeakerAnimation();
                     }
                   startTimer();
+                   playButton.classList.add('on');
              } else {
                  if(audio){
                      audio.pause();
                    }
                     stopSpeakerAnimation();
                  stopTimer();
+                 playButton.classList.remove('on');
              }
                if(activeScreen == "nowPlaying")
                {
@@ -907,6 +1339,7 @@
                 if(audio) {
                  audio.pause();
                 audio.removeEventListener('ended', nextTrack); // Remove old listener
+                audio.currentTime = 0; //Reset audio playback
             }
                audio = new Audio(tracks[currentTrackIndex].audioSrc); // Create new audio object
              audio.volume = volume / 100;
@@ -943,6 +1376,7 @@
              }
               updateNowPlaying();
               updatePlaylistHighlight();
+               triggerHapticFeedback();
           }
         }
          function previousTrack() {
@@ -961,6 +1395,7 @@
              }
              updateNowPlaying();
               updatePlaylistHighlight();
+             triggerHapticFeedback();
             }
         }
     function updateNowPlaying() {
@@ -973,6 +1408,8 @@
     }
     function setPreset(preset) {
         if(powerOn) {
+              triggerHapticFeedback();
+             const presetButton = document.querySelector(`.control-button-small:nth-child(${preset+1})`);
             switch (preset) {
                 case 0:
                     bassLevel = 10;
@@ -999,30 +1436,40 @@
                        updateEqDisplay()
                    break;
                }
+               if (presetButton){
+                  presetButton.classList.add('on'); // Turn on indicator
+                     setTimeout(() => {
+                        presetButton.classList.remove('on'); // Turn off after short delay
+                    }, 200);
+                  }
             }
         }
        function adjustBass(amount) {
             if(powerOn && equalizerMode) {
                bassLevel = Math.max(Math.min(bassLevel + amount, 20), -20);
                 updateEqDisplay()
+                 triggerHapticFeedback();
             }
        }
        function adjustMid(amount) {
         if(powerOn && equalizerMode) {
               midLevel = Math.max(Math.min(midLevel + amount, 20), -20);
                updateEqDisplay()
+               triggerHapticFeedback();
            }
        }
         function adjustTreble(amount) {
            if(powerOn && equalizerMode) {
              trebleLevel = Math.max(Math.min(trebleLevel + amount, 20), -20);
                 updateEqDisplay()
+                 triggerHapticFeedback();
             }
         }
     function adjustBalance(amount) {
        if(powerOn && equalizerMode) {
           balanceLevel = Math.max(Math.min(balanceLevel + amount, 10), -10);
            updateEqDisplay()
+           triggerHapticFeedback();
         }
     }
     function updateEqDisplay() {
@@ -1033,21 +1480,26 @@
          if(powerOn) {
             equalizerMode = !equalizerMode;
             eqDisplay.textContent = equalizerMode ? 'EQ ON' : 'EQ OFF'
+            triggerHapticFeedback();
          }
         }
 
      function toggleRecordMode() {
             if(powerOn) {
                isRecordMode = !isRecordMode;
+                triggerHapticFeedback();
                if (isRecordMode) {
                     screenTextInner[0].textContent = "Recording...";
                     screenTextInner[1].textContent = "Rec Mode";
                    screenTextInner[2].textContent = "";
                     stopTimer()
                     updateBottomDisplay(0);
-                    cycleScreenText(0)
+                    cycleScreenText(0);
+                    recButton.classList.add('on');
+
                 } else {
                    updateNowPlaying();
+                   recButton.classList.remove('on');
                 }
               }
        }
@@ -1056,6 +1508,7 @@
          if(powerOn) {
            isHeadphonesOn = !isHeadphonesOn;
             console.log('Headphones ' + (isHeadphonesOn ? 'on' : 'off'));
+             triggerHapticFeedback();
         }
       }
 
@@ -1063,37 +1516,44 @@
         if(powerOn) {
             isMicOn = !isMicOn;
              console.log('Mic ' + (isMicOn ? 'on' : 'off'));
+              triggerHapticFeedback();
         }
    }
+
     function powerToggle() {
-        powerOn = !powerOn;
+         powerOn = !powerOn;
+         triggerHapticFeedback();
         if(!powerOn)
         {
-            isPlaying = false;
+             isPlaying = false;
            if (audio) {
-                audio.pause();
-            }
-            stopTimer();
+                 audio.pause();
+                 audio.currentTime = 0; //Reset to start
+           }
+           stopTimer();
             stopSpeakerAnimation();
            updateBottomDisplay(0)
            screen.classList.remove('faded')
-             if(activeScreen == "nowPlaying")
-             {
-                 cycleScreenText(0)
-                 screenTextInner[0].textContent = "Power Off";
-                screenTextInner[1].textContent = "";
-               screenTextInner[2].textContent = "";
+            if(activeScreen == "nowPlaying")
+            {
+                cycleScreenText(0)
+                screenTextInner[0].textContent = "Power Off";
+               screenTextInner[1].textContent = "";
+               screenTextInner[2].textContent ="";
            }
+              powerSwitch.classList.remove('on');
+
         }else {
             updateNowPlaying()
            updateVolumeDisplay()
-            if (isPlaying && audio) {
-                   audio.play();
-                   if (audioContext) {
+             if (isPlaying && audio) {
+                  audio.play();
+                    if (audioContext) {
                        updateSpeakerAnimation();
                    }
-                   startTimer();
+                  startTimer();
              }
+             powerSwitch.classList.add('on');
         }
     }
      function menuToggle() {
@@ -1101,22 +1561,26 @@
              menuOpen = !menuOpen;
              setupOpen = false; // Ensure only one screen is active
              toggleActiveScreen(menuOpen ? "playlist" : "nowPlaying");
+             triggerHapticFeedback();
+             menuSwitch.classList.toggle('on');
+             setupSwitch.classList.remove('on');
          }
     }
 
     function setupToggle() {
          if (powerOn) {
-            setupOpen = !setupOpen;
+             setupOpen = !setupOpen;
              menuOpen = false;  // Ensure only one screen is active
            toggleActiveScreen(setupOpen ? "setup" : "nowPlaying");
+             triggerHapticFeedback();
+               setupSwitch.classList.toggle('on');
+               menuSwitch.classList.remove('on');
          }
     }
 
      function toggleActiveScreen(screenName){
            activeScreen = screenName
-          screenTextInner[0].textContent = "";
-          screenTextInner[1].textContent = "";
-          screenTextInner[2].textContent = "";
+          screenTextInner.forEach(text => text.textContent = ""); //Clear out screen text
            if(screenName == "nowPlaying") {
               playlistContainer.classList.remove('active');
                 updateNowPlaying();
@@ -1129,13 +1593,15 @@
               playlistContainer.classList.remove('active');
              screenTextInner[0].textContent = "Setup Menu";
             screenTextInner[1].textContent = "Settings";
-             screenTextInner[2].textContent = "";
+            screenTextInner[2].textContent = "";
          }
      }
 
-
-  function renderPlaylist() {
-        if (playlistRendered) return; // Prevent re-rendering if already done
+    function renderPlaylist() {
+            if (playlistRendered) {
+                updatePlaylistHighlight();
+                return;
+            } // Prevent re-rendering if already done
         playlistContainer.innerHTML = ''; // Clear existing playlist
         tracks.forEach((track, index) => {
             const item = document.createElement('div');
@@ -1144,8 +1610,10 @@
             item.addEventListener('click', () => selectTrack(index));
             playlistContainer.appendChild(item);
         });
+         updatePlaylistHighlight();
         playlistRendered = true;
     }
+
 
     function selectTrack(index) {
         if (powerOn) {
@@ -1163,6 +1631,7 @@
               }
                updateNowPlaying();
              updatePlaylistHighlight();
+              triggerHapticFeedback();
          }
     }
 
@@ -1185,6 +1654,7 @@
              setTimeout(() => { // Remove animation class after it finishes
                 cassetteDisplay.classList.remove('importing');
            }, 800); //Animation time
+            triggerHapticFeedback();
          }
 
     }
@@ -1208,12 +1678,34 @@
             reader.readAsDataURL(file);
        }
     }
+   function updatePresetIndicators() {
+    const presetButtons = document.querySelectorAll('.control-button-small');
+    presetButtons.forEach(button => button.classList.remove('on')); // Clear all states
+    // Find the current preset index
+    let currentPresetIndex = -1;
+    if (bassLevel === 10 && midLevel === -5 && trebleLevel === 5) {
+        currentPresetIndex = 0;
+    } else if (bassLevel === -5 && midLevel === 10 && trebleLevel === -5) {
+       currentPresetIndex = 1;
+    } else if (bassLevel === 5 && midLevel === -5 && trebleLevel === 10) {
+       currentPresetIndex = 2;
+    } else if (bassLevel === 0 && midLevel === 0 && trebleLevel === 0) {
+       currentPresetIndex = 3;
+    }
 
+    if (currentPresetIndex !== -1) {
+        presetButtons[currentPresetIndex].classList.add('on'); // Activate current preset
+    }
+  }
     //Initialize on page load
    initializeAudioContext();
    updateNowPlaying()
    updateEqDisplay()
    updatePlaylistHighlight()
+   updatePresetIndicators();
+   if (audioContext) {
+            updateSpeakerAnimation();
+    }
 </script>
 </body>
 </html>
