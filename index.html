@@ -46,79 +46,98 @@
             z-index: -1;
         }
          /* ====================== Main Screen Styles ====================== */
-         .screen {
-            background: linear-gradient(to bottom, #222, #000);
-           height: clamp(120px, 35vw, 180px);
-            border-bottom: 1px solid #444;
-             position: relative;
-             box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-             align-items: center;
-             color: #ddd;
-            text-align: center;
-             font-size: clamp(1.3rem, 3vw, 2rem);
-            font-weight: bold;
-            text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
-            overflow: hidden;
-            transition: opacity 0.3s ease;
-           border-radius: 8px;
-            box-shadow: inset 0 0 10px rgba(0,0,0,0.5), 0 2px 5px rgba(0,0,0,0.4) ; /* Added inset shadow */
-        }
-         .screen::before {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            right: 5px;
-            bottom: 5px;
-            border: 1px solid #555;
-             border-radius: 3px;
-         }
-         .screen.faded {
-          opacity: 0.5;
-        }
-        .screen-content{
-            position: relative;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            display: flex;
-             justify-content: center;
-           align-items: center;
-        }
-         .screen-text{
-             position: relative;
-             font-style: italic;
-        }
+         
+        .screen {
+    background: linear-gradient(to bottom, #222, #000); /* Deep glossy screen */
+    height: clamp(120px, 35vw, 180px);
+    border-bottom: 1px solid #444;
+    position: relative;
+    box-sizing: border-box;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #ddd;
+    text-align: center;
+    font-size: clamp(1.3rem, 3vw, 2rem);
+    font-weight: bold;
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    border-radius: 12px; /* More rounded corners for a polished look */
+    box-shadow: 
+        inset 0 0 10px rgba(0, 0, 0, 0.6), 
+        inset -2px -2px 5px rgba(255, 255, 255, 0.1), /* Glass-like depth */
+        4px 4px 8px rgba(0, 0, 0, 0.5); /* 3D shadow for physical feel */
+}
 
-        .screen-text-inner{
-           opacity: 0;
-            transition: opacity 1s ease;
-             font-family: 'Electrolize', sans-serif;
-             transform-style: preserve-3d;
-             color: white;
-            white-space: nowrap;
-             overflow: hidden;
-            text-overflow: ellipsis;
-             max-width: 90%;
-             font-size: clamp(1rem, 2.5vw, 1.5rem)
-         }
-       .screen-text-inner.active{
-             opacity: 1;
-       }
+.screen::before {
+    content: '';
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    right: 5px;
+    bottom: 5px;
+    border: 1px solid rgba(85, 85, 85, 0.7);
+    border-radius: 10px;
+    background: linear-gradient(145deg, #555, #333); /* Metallic frame */
+    box-shadow: 
+        inset 1px 1px 3px rgba(255, 255, 255, 0.2), 
+        inset -1px -1px 3px rgba(0, 0, 0, 0.7), 
+        4px 4px 10px rgba(0, 0, 0, 0.5); /* Metallic edges depth */
+    z-index: -1;
+}
 
-           /* Placeholder Screen Graphics */
-           .screen::after {
-            content: '';
-            position: absolute;
-             top: 20px;
-             left: 20px;
-           right: 20px;
-             bottom: 20px;
-           background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 50" fill="none" stroke="#444"><path d="M10,25 h80 m-80,-10 l20,10 l20,-15 l20,20 l20,-5 m-80,10 l20,-5 l20,10 l20,-10 l20,15 " stroke-width="1.5"/></svg>') no-repeat center/cover;
-           opacity: 0.2; /* Subtle waveform */
-         }
+.screen.faded {
+    opacity: 0.5;
+    transform: scale(0.98); /* Slight scale-down for the faded effect */
+}
+
+.screen-content {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.screen-text {
+    position: relative;
+    font-style: italic;
+}
+
+.screen-text-inner {
+    opacity: 0;
+    transition: opacity 1s ease, transform 0.5s ease;
+    font-family: 'Electrolize', sans-serif;
+    transform-style: preserve-3d;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.screen-text-inner.active {
+    opacity: 1;
+    transform: translateZ(10px); /* Slight 3D lift for text */
+}
+
+/* Placeholder Screen Graphics */
+.screen::after {
+    content: '';
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%" viewBox="0 0 100 50" fill="none" stroke="#444"><path d="M10,25 h80 m-80,-10 l20,10 l20,-15 l20,20 l20,-5 m-80,10 l20,-5 l20,10 l20,-10 l20,15 " stroke-width="1.5"/></svg>') no-repeat center/cover;
+    opacity: 0.2; /* Subtle waveform */
+    border-radius: 8px;
+    pointer-events: none;
+}
          /* ====================== Playlist Styles ====================== */
         .playlist-container {
               position: relative;
