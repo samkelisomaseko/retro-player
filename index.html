@@ -1656,6 +1656,50 @@
    updateEqDisplay()
    updatePlaylistHighlight()
     updatePresetIndicators()
+
+         // Local Storage Integration
+        const STORAGE_KEY = 'cassettePlayerState';
+
+        function saveState() {
+            const state = {
+                tracks: tracks.map(t => ({
+                    title: t.title,
+                    artist: t.artist,
+                    album: t.album,
+                    duration: t.duration,
+                    audioSrc: t.audioSrc
+                })),
+                volume,
+                currentTrackIndex,
+                settings: {
+                    bassLevel,
+                    midLevel,
+                    trebleLevel,
+                    balanceLevel,
+                    equalizerMode,
+                    shuffleOn,
+                    repeatOn
+                }
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadState() {
+            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+            if (saved) {
+                tracks = saved.tracks || [];
+                currentTrackIndex = saved.currentTrackIndex || 0;
+                volume = saved.volume || 0;
+                Object.assign(bassLevel, saved.settings.bassLevel);
+                Object.assign(midLevel, saved.settings.midLevel);
+                Object.assign(trebleLevel, saved.settings.trebleLevel);
+                shuffleOn = saved.settings.shuffleOn;
+                repeatOn = saved.settings.repeatOn;
+                updateVolumeDisplay();
+                updateNowPlaying();
+            }
+        }
+
 </script>
 </body>
 </html>
