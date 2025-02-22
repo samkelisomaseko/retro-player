@@ -1726,7 +1726,32 @@
             }
         }
 
-        function updateNowPlaying() {
+        document.addEventListener("DOMContentLoaded", function () {
+    const screenText = document.querySelectorAll(".screen-text-inner");
+
+    // Show welcome message initially
+    screenText[0].textContent = "Welcome To shamase.co";
+    screenText[1].textContent = "Classic Cassette Music Player";
+    screenText[2].textContent = "";
+
+    // Apply welcome animation
+    screenText[0].classList.add("welcome");
+    screenText[1].classList.add("welcome");
+
+    // After 3 seconds, reset the screen for Now Playing
+    setTimeout(() => {
+        screenText[0].classList.remove("welcome");
+        screenText[1].classList.remove("welcome");
+
+        screenText[0].textContent = "Start Playing";
+        screenText[1].textContent = "";
+        screenText[2].textContent = "";
+
+        screenText[0].classList.add("active");
+    }, 3000);
+});
+
+function updateNowPlaying() {
     const screenText = document.querySelectorAll(".screen-text-inner");
 
     // Update "Now Playing" screen with current song details
