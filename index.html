@@ -1962,6 +1962,125 @@ function togglePlayPause() {
             }
           };
         })();
+
+// Check if File System Access API is available
+async function requestMusicFolder() {
+    if (!('showDirectoryPicker' in window)) {
+        displayMessage("Your browser does not support folder selection.");
+        return;
+    }
+
+    try {
+        const directoryHandle = await window.showDirectoryPicker();
+        displayMessage("Scanning folder for music...");
+        await scanMusicFiles(directoryHandle);
+        savePlaylist(); // Save the playlist after loading
+    } catch (error) {
+        console.error("Error accessing folder:", error);
+        displayMessage("Failed to access folder. Please try again.");
+    }
+}
+
+// Scan and update playlist dynamically from the selected folder
+async function scanMusicFiles(directoryHandle) {
+    tracks = []; // Clear existing playlist
+
+    for await (const entry of directoryHandle.values()) {
+        if (entry.kind === "file" && entry.name.match(/\.(mp3|wav|ogg|flac)$/i)) {
+            const file = await entry.getFile();
+            await addFileToPlaylist(file);
+        }
+    }
+
+    if (tracks.length === 0) {
+        displayMessage("No music files found in the selected folder.");
+    } else {
+        displayMessage("Playlist updated successfully!");
+        renderPlaylist();
+        loadAudio(); // Load the first song for playback
+    }
+}
+
+// Add an audio file to the playlist with metadata
+async function addFileToPlaylist(file) {
+    const fileURL = URL.createObjectURL(file);
+
+    const metadata = await getAudioMetadata(file, fileURL);
+    tracks.push({
+        title: metadata.title || file.name.replace(/\.[^/.]+$/, ""),
+        artist: metadata.artist || "Unknown",
+        album: metadata.album || "Unknown",
+        duration: metadata.duration || 0,
+        audioSrc: fileURL
+    });
+}
+
+// Extract metadata from an audio file
+function getAudioMetadata(file, fileURL) {
+    return new Promise((resolve) => {
+        const audio = new Audio();
+        audio.src = fileURL;
+
+        audio.addEventListener('loadedmetadata', () => {
+            resolve({
+                title: file.name.replace(/\.[^/.]+$/, ""),
+                artist: "Unknown",
+                album: "Unknown",
+                duration: Math.round(audio.duration)
+            });
+        });
+
+        audio.load();
+    });
+}
+
+// Display messages on the screen
+function displayMessage(message) {
+    const screenText = document.querySelectorAll(".screen-text-inner");
+    screenText[0].textContent = message;
+    screenText[1].textContent = "";
+    screenText[2].textContent = "";
+
+    screenText[0].classList.add("active");
+}
+
+// Save playlist to localStorage for persistence
+function savePlaylist() {
+    localStorage.setItem("savedPlaylist", JSON.stringify(tracks));
+}
+
+// Load saved playlist on page reload
+function loadSavedPlaylist() {
+    const savedTracks = JSON.parse(localStorage.getItem("savedPlaylist"));
+    if (savedTracks && savedTracks.length > 0) {
+        tracks = savedTracks;
+        displayMessage("Loaded saved playlist!");
+        renderPlaylist();
+        loadAudio(); // Load first track
+    }
+}
+
+// Ensure audio plays correctly when loaded
+function loadAudio() {
+    if (tracks.length === 0) return;
+    
+    if (audio) {
+        audio.pause();
+        audio.removeEventListener('ended', nextTrack);
+    }
+    
+    audio = new Audio(tracks[currentTrackIndex].audioSrc);
+    audio.volume = volume / 100;
+    audio.addEventListener('ended', nextTrack);
+    audio.play().catch(error => console.error("Playback error:", error));
+}
+
+// Attach event to cassette import button
+document.querySelector('.cassette-display').addEventListener('click', requestMusicFolder);
+
+// Load saved playlist on startup
+document.addEventListener("DOMContentLoaded", loadSavedPlaylist);
+
         
     </script>
 </body>
