@@ -113,17 +113,26 @@
     font-family: 'Electrolize', sans-serif;
     transform-style: preserve-3d;
     color: white;
-    white-space: nowrap;
+    white-space: normal; /* Allows text to wrap */
     overflow: hidden;
-    text-overflow: ellipsis;
+    word-wrap: break-word; /* Ensures long words break properly */
+    text-align: center; /* Centers text */
     max-width: 90%;
+    max-height: 100%;
     font-size: clamp(1rem, 2.5vw, 1.5rem);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap; /* Ensures text wraps naturally */
+    line-height: 1.2; /* Adds space between lines to prevent overlap */
+    padding: 0 10px; /* Adds some padding to avoid edge cutting */
 }
 
 .screen-text-inner.active {
     opacity: 1;
-    transform: translateZ(10px); /* Slight 3D lift for text */
+    transform: translateZ(10px);
 }
+
 
 /* Placeholder Screen Graphics */
 .screen::after {
