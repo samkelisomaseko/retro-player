@@ -128,9 +128,17 @@
     padding: 0 10px; /* Adds some padding to avoid edge cutting */
 }
 
-.screen-text-inner.active {
+/* ====================== Welcome Animation ====================== */
+.screen-text-inner.welcome {
     opacity: 1;
-    transform: translateZ(10px);
+    transform: translateY(-10px);
+    animation: springBounce 1s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+@keyframes springBounce {
+    0% { transform: translateY(-30px) scale(0.8); opacity: 0; }
+    60% { transform: translateY(5px) scale(1.1); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; }
 }
 
 
@@ -1708,6 +1716,29 @@
                 updateNowPlaying();
             }
         }
+
+        document.addEventListener("DOMContentLoaded", function() {
+    const screenText = document.querySelectorAll(".screen-text-inner");
+    
+    // Set welcome message initially
+    screenText[0].textContent = "Welcome To Shamase.co";
+    screenText[1].textContent = "Classic Cassette Music Player";
+    screenText[2].textContent = "";
+    
+    screenText[0].classList.add("welcome");
+    screenText[1].classList.add("welcome");
+
+    // After 3 seconds, transition to Now Playing
+    setTimeout(() => {
+        screenText[0].classList.remove("welcome");
+        screenText[1].classList.remove("welcome");
+
+        // Update to Now Playing
+        screenText[0].textContent = "Now Playing";
+        screenText[1].textContent = tracks[currentTrackIndex].artist;
+        screenText[2].textContent = tracks[currentTrackIndex].album;
+    }, 3000);
+});
 
 </script>
 </body>
