@@ -107,6 +107,7 @@
     font-style: italic;
 }
 
+/* ====================== Screen Text Styling (Your Style) ====================== */
 .screen-text-inner {
     opacity: 0;
     transition: opacity 1s ease, transform 0.5s ease;
@@ -128,18 +129,26 @@
     padding: 0 10px; /* Adds some padding to avoid edge cutting */
 }
 
+/* ====================== Active State ====================== */
+.screen-text-inner.active {
+    opacity: 1;
+    transform: translateZ(10px);
+}
+
 /* ====================== Welcome Animation ====================== */
 .screen-text-inner.welcome {
     opacity: 1;
-    transform: translateY(-10px);
+    transform: translateY(-5px);
     animation: springBounce 1s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
+/* Spring bounce effect */
 @keyframes springBounce {
-    0% { transform: translateY(-30px) scale(0.8); opacity: 0; }
-    60% { transform: translateY(5px) scale(1.1); opacity: 1; }
+    0% { transform: translateY(-20px) scale(0.9); opacity: 0; }
+    50% { transform: translateY(5px) scale(1.05); opacity: 1; }
     100% { transform: translateY(0) scale(1); opacity: 1; }
 }
+
 
 
 /* Placeholder Screen Graphics */
@@ -1717,28 +1726,42 @@
             }
         }
 
-        document.addEventListener("DOMContentLoaded", function() {
+        function updateNowPlaying() {
     const screenText = document.querySelectorAll(".screen-text-inner");
-    
-    // Set welcome message initially
-    screenText[0].textContent = "Welcome To Shamase.co";
-    screenText[1].textContent = "Classic Cassette Music Player";
-    screenText[2].textContent = "";
-    
-    screenText[0].classList.add("welcome");
-    screenText[1].classList.add("welcome");
 
-    // After 3 seconds, transition to Now Playing
-    setTimeout(() => {
-        screenText[0].classList.remove("welcome");
-        screenText[1].classList.remove("welcome");
+    // Update "Now Playing" screen with current song details
+    screenText[0].textContent = "Now Playing";
+    screenText[1].textContent = tracks[currentTrackIndex].title;  // Song Title
+    screenText[2].textContent = `${tracks[currentTrackIndex].artist} - ${tracks[currentTrackIndex].album}`;  // Artist & Album
 
-        // Update to Now Playing
-        screenText[0].textContent = "Now Playing";
-        screenText[1].textContent = tracks[currentTrackIndex].artist;
-        screenText[2].textContent = tracks[currentTrackIndex].album;
-    }, 3000);
-});
+    // Apply active state for smooth transition
+    screenText[0].classList.add("active");
+    screenText[1].classList.add("active");
+    screenText[2].classList.add("active");
+}
+
+function togglePlayPause() {
+    if (powerOn) {
+        isPlaying = !isPlaying;
+        triggerHapticFeedback();
+
+        if (isPlaying) {
+            if (!audio) {
+                loadAudio(); // Load audio if not already loaded
+            }
+            audio.play();
+            startTimer();
+            playButton.classList.add('on');
+            updateNowPlaying(); // Show current song when play starts
+        } else {
+            if (audio) {
+                audio.pause();
+            }
+            stopTimer();
+            playButton.classList.remove('on');
+        }
+    }
+}
 
 </script>
 </body>
