@@ -1091,674 +1091,161 @@
        </div>
     </div>
     <script>
-       const screenTextInner = document.querySelectorAll(".screen-text-inner");
-          const bottomDisplay = document.querySelector('.bottom-display');
-          const eqDisplay = document.querySelector('.equalizer-display');
-          const playlistContainer = document.querySelector('.playlist-container');
-          const mainSpeaker = document.querySelector('.main-speaker');
-           const screen = document.querySelector('.screen');
-            const cassetteDisplay = document.querySelector('.cassette-display'); // Get cassette display element
-          const playButton = document.querySelector('.control-button:nth-child(2)');
-          const recButton = document.querySelector('.control-button:nth-child(5)');
-           const powerSwitch = document.querySelector('.toggle-switch:nth-child(1)')
-           const menuSwitch = document.querySelector('.toggle-switch:nth-child(2)')
-           const shuffleSwitch = document.querySelector('.toggle-switch:nth-child(3)');
-          const repeatSwitch = document.querySelector('.toggle-switch:nth-child(4)');
-          let currentIndex = 0;
-           let isPlaying = false;
-           let currentTrackIndex = 0;
-                   let volume = 0;
-        const volumeDisplay = document.querySelector('.volume-knob span');
-          let bassLevel = 0;
-          let midLevel = 0;
-           let trebleLevel = 0;
-            let balanceLevel = 0;
-            let equalizerMode = false;
-           let isRecordMode = false;
-          let powerOn = true;
-          let menuOpen = false;
-           let shuffleOn = false;
-            let repeatOn = false;
-          let activeScreen = "nowPlaying";
-          let timerInterval;
-          let audio; // Declare audio variable
-           let audioContext;
-            let analyser;
-           let source;
-           let frequencyData;
-          let playlistRendered = false;
-           let currentTimerTime = 0; // Track the timer time to make more reliable
-           let bassFilter, midFilter, trebleFilter, balanceGain;
-            let tracks = [
-            {
-                title: "I Love The 80s",
-                artist: "Mixtape Memories",
-                album: "ThrowBack",
-                duration: 180,
-                audioSrc: "The-Irrepressibles-in-this-shirt-.mp3" // <- Replace with actual file path or make sure an audio file with the name is in same directory
-            },
-             {
-                title: "Let Me Take You Back",
-                artist: "Mixtape Memories",
-                album: "Before Depression Was A Thing",
-                duration: 240,
-                audioSrc: "Alphaville  Forever Young.mp3"// <- Replace with actual file path or make sure an audio file with the name is in same directory
-            }
-           ];
-      // Function to trigger haptic feedback (if supported)
-        function triggerHapticFeedback() {
-          if (navigator.vibrate) {
-            navigator.vibrate(50); // Vibrate for 50 milliseconds
-           }
-        }
-    // Function to initialize audio context and analyser
-    function initializeAudioContext() {
-            try{
-                audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                analyser = audioContext.createAnalyser();
-                analyser.fftSize = 2048;
-                frequencyData = new Uint8Array(analyser.frequencyBinCount); // Create frequency data array
+const screenTextInner = document.querySelectorAll(".screen-text-inner");
+const bottomDisplay = document.querySelector('.bottom-display');
+const eqDisplay = document.querySelector('.equalizer-display');
+const playlistContainer = document.querySelector('.playlist-container');
+const mainSpeaker = document.querySelector('.main-speaker');
+const screen = document.querySelector('.screen');
+const cassetteDisplay = document.querySelector('.cassette-display'); // Get cassette display element
+const playButton = document.querySelector('.control-button:nth-child(2)');
+const recButton = document.querySelector('.control-button:nth-child(5)');
+const powerSwitch = document.querySelector('.toggle-switch:nth-child(1)')
+const menuSwitch = document.querySelector('.toggle-switch:nth-child(2)')
+const shuffleSwitch = document.querySelector('.toggle-switch:nth-child(3)');
+const repeatSwitch = document.querySelector('.toggle-switch:nth-child(4)');
+let currentIndex = 0;
+let isPlaying = false;
+let currentTrackIndex = 0;
+let volume = 0;
+const volumeDisplay = document.querySelector('.volume-knob span');
+let bassLevel = 0;
+let midLevel = 0;
+let trebleLevel = 0;
+let balanceLevel = 0;
+let equalizerMode = false;
+let isRecordMode = false;
+let powerOn = true;
+let menuOpen = false;
+let shuffleOn = false;
+let repeatOn = false;
+let activeScreen = "nowPlaying";
+let timerInterval;
+let audio; // Declare audio variable
+let audioContext;
+let analyser;
+let source;
+let frequencyData;
+let tracks = [];
+let bassFilter, midFilter, trebleFilter, balanceGain;
+const STORAGE_KEY = 'cassettePlayerState';
 
-                    // Create BiquadFilter nodes for bass, mid, and treble
-                     bassFilter = audioContext.createBiquadFilter();
-                     bassFilter.type = 'lowshelf';
-                     bassFilter.frequency.value = 200; // Bass Frequency
-                    midFilter = audioContext.createBiquadFilter();
-                     midFilter.type = 'peaking';
-                     midFilter.frequency.value = 1000; // Mid Frequency
-                    midFilter.Q.value = 0.5;
-                     trebleFilter = audioContext.createBiquadFilter();
-                    trebleFilter.type = 'highshelf';
-                     trebleFilter.frequency.value = 4000; // Treble Frequency
-
-                    balanceGain = audioContext.createGain();
-
-
-
-            } catch(e){
-              console.error("Error initializing audio context:", e);
-              audioContext = null;
-              analyser = null;
-            }
-
+function triggerHapticFeedback() {
+    if (navigator.vibrate) {
+        navigator.vibrate(50); // Vibrate for 50 milliseconds
     }
+}
 
-    // Function to connect audio source to analyser
-    function connectAudioToAnalyser(){
-         if(audio && analyser){
-              try{
-                     source = audioContext.createMediaElementSource(audio); // Create audio source
-                       source.connect(bassFilter);
-                         bassFilter.connect(midFilter);
-                         midFilter.connect(trebleFilter);
-                        trebleFilter.connect(balanceGain);
-                        balanceGain.connect(analyser); // Connect balance to analyser
-                     analyser.connect(audioContext.destination); // Connect analyser to audio output
-                   }catch(e){
-                    console.error("Error connecting audio to analyser:", e);
-                        source = null;
-                        }
-        }
+function initializeAudioContext() {
+    try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        analyser = audioContext.createAnalyser();
+        analyser.fftSize = 2048;
+        frequencyData = new Uint8Array(analyser.frequencyBinCount); // Create frequency data array
 
+        // Create BiquadFilter nodes for bass, mid, and treble
+        bassFilter = audioContext.createBiquadFilter();
+        bassFilter.type = 'lowshelf';
+        bassFilter.frequency.value = 200; // Bass Frequency
+        midFilter = audioContext.createBiquadFilter();
+        midFilter.type = 'peaking';
+        midFilter.frequency.value = 1000; // Mid Frequency
+        midFilter.Q.value = 0.5;
+        trebleFilter = audioContext.createBiquadFilter();
+        trebleFilter.type = 'highshelf';
+        trebleFilter.frequency.value = 4000; // Treble Frequency
+
+        balanceGain = audioContext.createGain();
+
+    } catch (e) {
+        console.error("Error initializing audio context:", e);
+        audioContext = null;
+        analyser = null;
     }
+}
 
-
-          function cycleScreenText(index) {
-          screenTextInner.forEach((item, i) =>{
-              if (index == i)
-              {
-                  item.classList.add('active');
-
-              }else{
-                 item.classList.remove('active');
-              }
-         })
-      }
-     function toggleScreenOpacity() {
-        screen.classList.toggle('faded');
-          triggerHapticFeedback();
-    }
-
-     function incrementVolume() {
-      volume = (volume + 10) % 100;
-      updateVolumeDisplay();
-       if (audio) {
-            audio.volume = volume / 100; // Set volume on audio element (0 to 1)
-             triggerHapticFeedback();
+function connectAudioToAnalyser() {
+    if (audio && analyser) {
+        try {
+            source = audioContext.createMediaElementSource(audio); // Create audio source
+            source.connect(bassFilter);
+            bassFilter.connect(midFilter);
+            midFilter.connect(trebleFilter);
+            trebleFilter.connect(balanceGain);
+            balanceGain.connect(analyser); // Connect balance to analyser
+            analyser.connect(audioContext.destination); // Connect analyser to audio output
+        } catch (e) {
+            console.error("Error connecting audio to analyser:", e);
+            source = null;
         }
     }
+}
 
-     function updateVolumeDisplay() {
-        volumeDisplay.textContent = String(volume).padStart(2, '0');
+function cycleScreenText(index) {
+    screenTextInner.forEach((item, i) => {
+        if (index === i) {
+            item.classList.add('active');
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+function toggleScreenOpacity() {
+    screen.classList.toggle('faded');
+    triggerHapticFeedback();
+}
+
+function incrementVolume() {
+    volume = (volume + 10) % 100;
+    updateVolumeDisplay();
+    if (audio) {
+        audio.volume = volume / 100; // Set volume on audio element (0 to 1)
+        triggerHapticFeedback();
     }
-       function updateBottomDisplay(time) {
-           const minutes = Math.floor(time / 60);
-           const seconds = time % 60;
-           bottomDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-    }
-        function startTimer() {
-             currentTimerTime = 0; // Reset the current timer time.
-            updateBottomDisplay(currentTimerTime); //Initial display
-          timerInterval = setInterval( () => {
-                if (isPlaying) {
-                    currentTimerTime++;
+}
+
+function updateVolumeDisplay() {
+    volumeDisplay.textContent = String(volume).padStart(2, '0');
+}
+
+function updateBottomDisplay(time) {
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+    bottomDisplay.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+}
+
+function startTimer() {
+    currentTimerTime = 0; // Reset the current timer time.
+    updateBottomDisplay(currentTimerTime); //Initial display
+    timerInterval = setInterval(() => {
+        if (isPlaying) {
+            currentTimerTime++;
+            updateBottomDisplay(currentTimerTime);
+            if (currentTimerTime > tracks[currentTrackIndex].duration) {
+                if (repeatOn) {
+                    currentTimerTime = 0;
+                    audio.currentTime = 0;
                     updateBottomDisplay(currentTimerTime);
-                     if (currentTimerTime > tracks[currentTrackIndex].duration) {
-                         if(repeatOn){
-                           currentTimerTime = 0;
-                           audio.currentTime = 0;
-                           updateBottomDisplay(currentTimerTime);
-                           audio.play()
-                         }else{
-                           nextTrack();
-                           currentTimerTime = 0; //Reset timer
-                          updateBottomDisplay(currentTimerTime);
-                         }
-
-                   }
-                }
-            }, 1000);
-        }
-
-       function stopTimer() {
-          clearInterval(timerInterval);
-        }
-
-         function togglePlayPause() {
-          if (powerOn) {
-               isPlaying = !isPlaying;
-               triggerHapticFeedback(); // Added haptic feedback
-            if (isPlaying) {
-                   if (!audio){
-                     loadAudio(); // Load audio if not already loaded
-                   }
-                  audio.play();
-                   startTimer();
-                   playButton.classList.add('on');
-             } else {
-                 if(audio){
-                     audio.pause();
-                   }
-                 stopTimer();
-                 playButton.classList.remove('on');
-             }
-               if(activeScreen == "nowPlaying")
-               {
-                    cycleScreenText(0);
-               }
-
-           }
-         }
-
-       function loadAudio() {
-           if (!tracks[currentTrackIndex] || !tracks[currentTrackIndex].audioSrc) {
-                console.error("Error: No audio source for track", currentTrackIndex);
-                audio = null;
-                return;
-            }
-          try{
-                if(audio) {
-                 audio.pause();
-                audio.removeEventListener('ended', nextTrack); // Remove old listener
-                audio.currentTime = 0; //Reset audio playback
-            }
-               audio = new Audio(tracks[currentTrackIndex].audioSrc); // Create new audio object
-             audio.volume = volume / 100;
-                audio.addEventListener('ended', nextTrack); // Add listener for track end
-               audio.addEventListener('error', (e) => {
-                        console.error('Audio load error:', e);
-                        audio = null; //Reset audio to null when error happens
-                });
-                if (audioContext) {
-                    connectAudioToAnalyser(); // Connect the audio source to the analyser
-                      updateEqualizerFilters()
-                }
-
-
-           }catch(e){
-               audio = null; //Set audio null if something goes wrong
-                console.error("Error loading audio:", e);
-           }
-
-        }
-
-
-          function nextTrack() {
-          if (powerOn) {
-            
-              stopTimer();
-            updateBottomDisplay(0);
-             
-              if (shuffleOn) {
-                 let newIndex;
-                    do {
-                     newIndex = Math.floor(Math.random() * tracks.length);
-                    } while (newIndex === currentTrackIndex); // Ensure no same track is chosen
-                  currentTrackIndex = newIndex;
-              }else{
-                  currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
-              }
-            loadAudio(); // Load audio
-            if (isPlaying) {
-                 audio.play();
-                  startTimer();
-             }
-              updateNowPlaying();
-              updatePlaylistHighlight();
-               triggerHapticFeedback();
-          }
-        }
-         function previousTrack() {
-         if (powerOn) {
-             currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
-           stopTimer();
-            updateBottomDisplay(0);
-             loadAudio(); // Load audio
-            if (isPlaying) {
-                  audio.play();
-                   startTimer();
-             }
-             updateNowPlaying();
-              updatePlaylistHighlight();
-             triggerHapticFeedback();
-            }
-        }
-    function updateNowPlaying() {
-            cycleScreenText(0);
-             if(activeScreen == "nowPlaying") {
-                 screenTextInner[0].textContent = tracks[currentTrackIndex].title;
-                screenTextInner[1].textContent = tracks[currentTrackIndex].artist;
-                screenTextInner[2].textContent = tracks[currentTrackIndex].album;
-               }
-    }
-    function setPreset(preset) {
-        if(powerOn) {
-              triggerHapticFeedback();
-             const presetButton = document.querySelector(`.control-button-small:nth-child(${preset+1})`);
-            switch (preset) {
-                case 0:
-                    bassLevel = 10;
-                  midLevel = -5;
-                   trebleLevel = 5;
-                     updateEqDisplay();
-                    updateEqualizerFilters()
-                   break;
-                case 1:
-                     bassLevel = -5;
-                    midLevel = 10;
-                   trebleLevel = -5;
-                    updateEqDisplay();
-                     updateEqualizerFilters()
-                   break;
-                case 2:
-                    bassLevel = 5;
-                     midLevel = -5;
-                    trebleLevel = 10;
-                     updateEqDisplay();
-                      updateEqualizerFilters()
-                    break;
-                 case 3:
-                      bassLevel = 0;
-                     midLevel = 0;
-                      trebleLevel = 0;
-                       updateEqDisplay();
-                       updateEqualizerFilters()
-                   break;
-               }
-               if (presetButton){
-                  presetButton.classList.add('on'); // Turn on indicator
-                     setTimeout(() => {
-                        presetButton.classList.remove('on'); // Turn off after short delay
-                    }, 200);
-                  }
-                  updatePresetIndicators()
-            }
-        }
-         function updateEqualizerFilters() {
-            if (audioContext && equalizerMode) {
-                 bassFilter.gain.value = bassLevel; // Adjust bass gain
-               midFilter.gain.value = midLevel;    // Adjust mid gain
-                trebleFilter.gain.value = trebleLevel // Adjust treble gain
-              balanceGain.gain.value = 1+ (balanceLevel/10);
-            }else {
-              bassFilter.gain.value = 0;
-                midFilter.gain.value = 0;
-                trebleFilter.gain.value = 0;
-              balanceGain.gain.value = 1;
-            }
-        }
-       function adjustBass(amount) {
-            if(powerOn && equalizerMode) {
-               bassLevel = Math.max(Math.min(bassLevel + amount, 20), -20);
-                updateEqDisplay()
-                updateEqualizerFilters()
-                 triggerHapticFeedback();
-            }
-       }
-       function adjustMid(amount) {
-        if(powerOn && equalizerMode) {
-              midLevel = Math.max(Math.min(midLevel + amount, 20), -20);
-               updateEqDisplay()
-               updateEqualizerFilters()
-               triggerHapticFeedback();
-           }
-       }
-        function adjustTreble(amount) {
-           if(powerOn && equalizerMode) {
-             trebleLevel = Math.max(Math.min(trebleLevel + amount, 20), -20);
-                updateEqDisplay()
-                updateEqualizerFilters()
-                 triggerHapticFeedback();
-            }
-        }
-    function adjustBalance(amount) {
-       if(powerOn && equalizerMode) {
-          balanceLevel = Math.max(Math.min(balanceLevel + amount, 10), -10);
-           updateEqDisplay()
-           updateEqualizerFilters()
-           triggerHapticFeedback();
-        }
-    }
-    function updateEqDisplay() {
-            eqDisplay.textContent = `B:${String(bassLevel).padStart(2, '0')} M:${String(midLevel).padStart(2, '0')} T:${String(trebleLevel).padStart(2, '0')} Bal:${String(balanceLevel).padStart(2, '0')}`;
-        }
-
-     function toggleEqualizerMode() {
-         if(powerOn) {
-            equalizerMode = !equalizerMode;
-            eqDisplay.textContent = equalizerMode ? 'EQ ON' : 'EQ OFF'
-            updateEqualizerFilters()
-            triggerHapticFeedback();
-         }
-        }
-
-     function toggleRecordMode() {
-            if(powerOn) {
-               isRecordMode = !isRecordMode;
-                triggerHapticFeedback();
-               if (isRecordMode) {
-                    screenTextInner[0].textContent = "Recording...";
-                    screenTextInner[1].textContent = "Rec Mode";
-                   screenTextInner[2].textContent = "";
-                    stopTimer()
-                    updateBottomDisplay(0);
-                    cycleScreenText(0);
-                    recButton.classList.add('on');
-
-                } else {
-                   updateNowPlaying();
-                   recButton.classList.remove('on');
-                }
-              }
-       }
-
-    function powerToggle() {
-         powerOn = !powerOn;
-         triggerHapticFeedback();
-        if(!powerOn)
-        {
-             isPlaying = false;
-           if (audio) {
-                 audio.pause();
-                 audio.currentTime = 0; //Reset to start
-           }
-           stopTimer();
-           updateBottomDisplay(0)
-           screen.classList.remove('faded')
-            if(activeScreen == "nowPlaying")
-            {
-                cycleScreenText(0)
-                screenTextInner[0].textContent = "Power Off";
-               screenTextInner[1].textContent = "";
-               screenTextInner[2].textContent ="";
-           }
-              powerSwitch.classList.remove('on');
-
-        }else {
-            updateNowPlaying()
-           updateVolumeDisplay()
-             if (isPlaying && audio) {
-                  audio.play();
-                   startTimer();
-             }
-             powerSwitch.classList.add('on');
-        }
-    }
-     function menuToggle() {
-        if (powerOn) {
-             menuOpen = !menuOpen;
-             toggleActiveScreen(menuOpen ? "playlist" : "nowPlaying");
-             triggerHapticFeedback();
-             menuSwitch.classList.toggle('on');
-         }
-    }
-
-    function toggleActiveScreen(screenName){
-           activeScreen = screenName
-          screenTextInner.forEach(text => text.textContent = ""); //Clear out screen text
-           if(screenName == "nowPlaying") {
-              playlistContainer.classList.remove('active');
-                updateNowPlaying();
-          } else if(screenName == "playlist") {
-                 renderPlaylist();
-               playlistContainer.classList.add('active');
-             cycleScreenText(0); // reset the text to "now playing"
-             screenTextInner[0].textContent = "Choose a track"
-         }
-     }
-
-    function renderPlaylist() {
-            if (playlistRendered) {
-                updatePlaylistHighlight();
-                return;
-            } // Prevent re-rendering if already done
-        playlistContainer.innerHTML = ''; // Clear existing playlist
-        tracks.forEach((track, index) => {
-            const item = document.createElement('div');
-            item.classList.add('playlist-item');
-            item.textContent = track.title;
-            item.addEventListener('click', () => selectTrack(index));
-             playlistContainer.appendChild(item);
-        });
-         updatePlaylistHighlight();
-        playlistRendered = true;
-    }
-
-    function selectTrack(index) {
-        if (powerOn) {
-             currentTrackIndex = index;
-             stopTimer();
-            updateBottomDisplay(0)
-             loadAudio();
-              if (isPlaying) {
                     audio.play();
-                    startTimer();
-              }
-               updateNowPlaying();
-             updatePlaylistHighlight();
-              triggerHapticFeedback();
-         }
-    }
-   function updatePlaylistHighlight() {
-        const playlistItems = document.querySelectorAll('.playlist-item');
-        playlistItems.forEach((item, index) => {
-              if (index === currentTrackIndex) {
-                  item.classList.add('active');
-                  // Center the selected item in the playlist
-                  const itemHeight = item.offsetHeight;
-                  const containerHeight = playlistContainer.offsetHeight;
-                  const scrollPosition = item.offsetTop - (containerHeight / 2) + (itemHeight / 2);
-                                    playlistContainer.scrollTo({
-                        top: scrollPosition,
-                         behavior: 'smooth' // smooth scrolling animation
-                    });
-                 } else {
-                    item.classList.remove('active');
+                } else {
+                    nextTrack();
+                    currentTimerTime = 0; //Reset timer
+                    updateBottomDisplay(currentTimerTime);
                 }
-         });
-     }
-
-  // Function to handle cassette click animation and file import
-    function importMusic() {
-        if (powerOn) {
-            cassetteDisplay.classList.add('importing'); // Start animation
-            document.getElementById('fileInput').click(); // Programmatically click the hidden file input
-             setTimeout(() => { // Remove animation class after it finishes
-                cassetteDisplay.classList.remove('importing');
-           }, 800); //Animation time
-            triggerHapticFeedback();
-         }
-
-    }
-  function handleFile(event) {
-         const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-              const newTrack = {
-                  title: file.name,
-                    artist: "Unknown",
-                    album: "Unknown",
-                    duration: 300,
-                    audioSrc: e.target.result
-                };
-               tracks.push(newTrack);
-               if (menuOpen && activeScreen == "playlist"){
-                renderPlaylist()
-               }
-            };
-            reader.readAsDataURL(file);
-       }
-    }
-   function updatePresetIndicators() {
-        const presetButtons = document.querySelectorAll('.control-button-small');
-        presetButtons.forEach(button => button.classList.remove('on')); // Clear all states
-        // Find the current preset index
-        let currentPresetIndex = -1;
-        if (bassLevel === 10 && midLevel === -5 && trebleLevel === 5) {
-            currentPresetIndex = 0;
-        } else if (bassLevel === -5 && midLevel === 10 && trebleLevel === -5) {
-            currentPresetIndex = 1;
-        } else if (bassLevel === 5 && midLevel === -5 && trebleLevel === 10) {
-            currentPresetIndex = 2;
-        } else if (bassLevel === 0 && midLevel === 0 && trebleLevel === 0) {
-            currentPresetIndex = 3;
-        }
-
-        if (currentPresetIndex !== -1) {
-            presetButtons[currentPresetIndex].classList.add('on'); // Activate current preset
-        }
-    }
-    function shuffleToggle() {
-        if(powerOn){
-           shuffleOn = !shuffleOn;
-            shuffleSwitch.classList.toggle('on');
-            triggerHapticFeedback();
-        }
-    }
-      function repeatToggle() {
-        if(powerOn){
-           repeatOn = !repeatOn;
-          repeatSwitch.classList.toggle('on');
-            triggerHapticFeedback();
-        }
-    }
-    //Initialize on page load
-   initializeAudioContext();
-   updateNowPlaying()
-   updateEqDisplay()
-   updatePlaylistHighlight()
-    updatePresetIndicators()
-    
-
-         // Local Storage Integration
-        const STORAGE_KEY = 'cassettePlayerState';
-
-        function saveState() {
-            const state = {
-                tracks: tracks.map(t => ({
-                    title: t.title,
-                    artist: t.artist,
-                    album: t.album,
-                    duration: t.duration,
-                    audioSrc: t.audioSrc
-                })),
-                volume,
-                currentTrackIndex,
-                settings: {
-                    bassLevel,
-                    midLevel,
-                    trebleLevel,
-                    balanceLevel,
-                    equalizerMode,
-                    shuffleOn,
-                    repeatOn
-                }
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        }
-
-        function loadState() {
-            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (saved) {
-                tracks = saved.tracks || [];
-                currentTrackIndex = saved.currentTrackIndex || 0;
-                volume = saved.volume || 0;
-                Object.assign(bassLevel, saved.settings.bassLevel);
-                Object.assign(midLevel, saved.settings.midLevel);
-                Object.assign(trebleLevel, saved.settings.trebleLevel);
-                shuffleOn = saved.settings.shuffleOn;
-                repeatOn = saved.settings.repeatOn;
-                updateVolumeDisplay();
-                updateNowPlaying();
             }
         }
+    }, 1000);
+}
 
-    
-        document.addEventListener("DOMContentLoaded", function () {
-    const screenText = document.querySelectorAll(".screen-text-inner");
-
-    // Show welcome message initially
-    screenText[0].textContent = "Mixtape Memories";
-    screenText[1].textContent = "Classic Cassette Music Player";
-    screenText[2].textContent = "";
-
-    // Apply welcome animation
-    screenText[0].classList.add("welcome");
-    screenText[1].classList.add("welcome");
-
-    // After 3 seconds, reset the screen for Now Playing
-    setTimeout(() => {
-        screenText[0].classList.remove("welcome");
-        screenText[1].classList.remove("welcome");
-
-        screenText[0].textContent = "Insert Cassette And Start Playing";
-        screenText[1].textContent = "";
-        screenText[2].textContent = "";
-
-        screenText[0].classList.add("active");
-    }, 3000);
-});
-
-function updateNowPlaying() {
-    const screenText = document.querySelectorAll(".screen-text-inner");
-
-    // Update "Now Playing" screen with current song details
-    screenText[0].textContent = "Now Playing";
-    screenText[1].textContent = tracks[currentTrackIndex].title;  // Song Title
-    screenText[2].textContent = `${tracks[currentTrackIndex].artist} - ${tracks[currentTrackIndex].album}`;  // Artist & Album
-
-    // Apply active state for smooth transition
-    screenText[0].classList.add("active");
-    screenText[1].classList.add("active");
-    screenText[2].classList.add("active");
+function stopTimer() {
+    clearInterval(timerInterval);
 }
 
 function togglePlayPause() {
     if (powerOn) {
         isPlaying = !isPlaying;
-        triggerHapticFeedback();
-
+        triggerHapticFeedback(); // Added haptic feedback
         if (isPlaying) {
             if (!audio) {
                 loadAudio(); // Load audio if not already loaded
@@ -1777,6 +1264,474 @@ function togglePlayPause() {
     }
 }
 
+function loadAudio() {
+    if (!tracks[currentTrackIndex] || !tracks[currentTrackIndex].audioSrc) {
+        console.error("Error: No audio source for track", currentTrackIndex);
+        audio = null;
+        return;
+    }
+    try {
+        if (audio) {
+            audio.pause();
+            audio.removeEventListener('ended', nextTrack); // Remove old listener
+            audio.currentTime = 0; //Reset audio playback
+        }
+        audio = new Audio(tracks[currentTrackIndex].audioSrc); // Create new audio object
+        audio.volume = volume / 100;
+        audio.addEventListener('loadedmetadata', () => {
+            tracks[currentTrackIndex].duration = Math.floor(audio.duration);
+        });
+        audio.addEventListener('ended', nextTrack); // Add listener for track end
+        audio.addEventListener('error', (e) => {
+            console.error('Audio load error:', e);
+            audio = null; //Reset audio to null when error happens
+        });
+        if (audioContext) {
+            connectAudioToAnalyser(); // Connect the audio source to the analyser
+            updateEqualizerFilters();
+        }
+    } catch (e) {
+        audio = null; //Set audio null if something goes wrong
+        console.error("Error loading audio:", e);
+    }
+}
+
+function nextTrack() {
+    if (powerOn) {
+        stopTimer();
+        updateBottomDisplay(0);
+        if (shuffleOn) {
+            let newIndex;
+            do {
+                newIndex = Math.floor(Math.random() * tracks.length);
+            } while (newIndex === currentTrackIndex); // Ensure no same track is chosen
+            currentTrackIndex = newIndex;
+        } else {
+            currentTrackIndex = (currentTrackIndex + 1) % tracks.length;
+        }
+        loadAudio(); // Load audio
+        if (isPlaying) {
+            audio.play();
+            startTimer();
+        }
+        updateNowPlaying();
+        updatePlaylistHighlight();
+        triggerHapticFeedback();
+    }
+}
+
+function previousTrack() {
+    if (powerOn) {
+        currentTrackIndex = (currentTrackIndex - 1 + tracks.length) % tracks.length;
+        stopTimer();
+        updateBottomDisplay(0);
+        loadAudio(); // Load audio
+        if (isPlaying) {
+            audio.play();
+            startTimer();
+        }
+        updateNowPlaying();
+        updatePlaylistHighlight();
+        triggerHapticFeedback();
+    }
+}
+
+function updateNowPlaying() {
+    cycleScreenText(0);
+    if (activeScreen === "nowPlaying") {
+        screenTextInner[0].textContent = tracks[currentTrackIndex].title;
+        screenTextInner[1].textContent = tracks[currentTrackIndex].artist;
+        screenTextInner[2].textContent = tracks[currentTrackIndex].album;
+    }
+}
+
+function setPreset(preset) {
+    if (powerOn) {
+        triggerHapticFeedback();
+        const presetButton = document.querySelector(`.control-button-small:nth-child(${preset + 1})`);
+        switch (preset) {
+            case 0:
+                bassLevel = 10;
+                midLevel = -5;
+                trebleLevel = 5;
+                updateEqDisplay();
+                updateEqualizerFilters();
+                break;
+            case 1:
+                bassLevel = -5;
+                midLevel = 10;
+                trebleLevel = -5;
+                updateEqDisplay();
+                updateEqualizerFilters();
+                break;
+            case 2:
+                bassLevel = 5;
+                midLevel = -5;
+                trebleLevel = 10;
+                updateEqDisplay();
+                updateEqualizerFilters();
+                break;
+            case 3:
+                bassLevel = 0;
+                midLevel = 0;
+                trebleLevel = 0;
+                updateEqDisplay();
+                updateEqualizerFilters();
+                break;
+        }
+        if (presetButton) {
+            presetButton.classList.add('on'); // Turn on indicator
+            setTimeout(() => {
+                presetButton.classList.remove('on'); // Turn off after short delay
+            }, 200);
+        }
+        updatePresetIndicators();
+    }
+}
+
+function updateEqualizerFilters() {
+    if (audioContext && equalizerMode) {
+        bassFilter.gain.value = bassLevel; // Adjust bass gain
+        midFilter.gain.value = midLevel;    // Adjust mid gain
+        trebleFilter.gain.value = trebleLevel // Adjust treble gain
+        balanceGain.gain.value = 1 + (balanceLevel / 10);
+    } else {
+        bassFilter.gain.value = 0;
+        midFilter.gain.value = 0;
+        trebleFilter.gain.value = 0;
+        balanceGain.gain.value = 1;
+    }
+}
+
+function adjustBass(amount) {
+    if (powerOn && equalizerMode) {
+        bassLevel = Math.max(Math.min(bassLevel + amount, 20), -20);
+        updateEqDisplay();
+        updateEqualizerFilters();
+        triggerHapticFeedback();
+    }
+}
+
+function adjustMid(amount) {
+    if (powerOn && equalizerMode) {
+        midLevel = Math.max(Math.min(midLevel + amount, 20), -20);
+        updateEqDisplay();
+        updateEqualizerFilters();
+        triggerHapticFeedback();
+    }
+}
+
+function adjustTreble(amount) {
+    if (powerOn && equalizerMode) {
+        trebleLevel = Math.max(Math.min(trebleLevel + amount, 20), -20);
+        updateEqDisplay();
+        updateEqualizerFilters();
+        triggerHapticFeedback();
+    }
+}
+
+function adjustBalance(amount) {
+    if (powerOn && equalizerMode) {
+        balanceLevel = Math.max(Math.min(balanceLevel + amount, 10), -10);
+        updateEqDisplay();
+        updateEqualizerFilters();
+        triggerHapticFeedback();
+    }
+}
+
+function updateEqDisplay() {
+    eqDisplay.textContent = `B:${String(bassLevel).padStart(2, '0')} M:${String(midLevel).padStart(2, '0')} T:${String(trebleLevel).padStart(2, '0')} Bal:${String(balanceLevel).padStart(2, '0')}`;
+}
+
+function toggleEqualizerMode() {
+    if (powerOn) {
+        equalizerMode = !equalizerMode;
+        eqDisplay.textContent = equalizerMode ? 'EQ ON' : 'EQ OFF';
+        updateEqualizerFilters();
+        triggerHapticFeedback();
+    }
+}
+
+function toggleRecordMode() {
+    if (powerOn) {
+        isRecordMode = !isRecordMode;
+        triggerHapticFeedback();
+        if (isRecordMode) {
+            screenTextInner[0].textContent = "Recording...";
+            screenTextInner[1].textContent = "Rec Mode";
+            screenTextInner[2].textContent = "";
+            stopTimer();
+            updateBottomDisplay(0);
+            cycleScreenText(0);
+            recButton.classList.add('on');
+        } else {
+            updateNowPlaying();
+            recButton.classList.remove('on');
+        }
+    }
+}
+
+function powerToggle() {
+    powerOn = !powerOn;
+    triggerHapticFeedback();
+    if (!powerOn) {
+        isPlaying = false;
+        if (audio) {
+            audio.pause();
+            audio.currentTime = 0; //Reset to start
+        }
+        stopTimer();
+        updateBottomDisplay(0);
+        screen.classList.remove('faded');
+        if (activeScreen === "nowPlaying") {
+            cycleScreenText(0);
+            screenTextInner[0].textContent = "Power Off";
+            screenTextInner[1].textContent = "";
+            screenTextInner[2].textContent = "";
+        }
+        powerSwitch.classList.remove('on');
+    } else {
+        updateNowPlaying();
+        updateVolumeDisplay();
+        if (isPlaying && audio) {
+            audio.play();
+            startTimer();
+        }
+        powerSwitch.classList.add('on');
+    }
+}
+
+function menuToggle() {
+    if (powerOn) {
+        menuOpen = !menuOpen;
+        toggleActiveScreen(menuOpen ? "playlist" : "nowPlaying");
+        triggerHapticFeedback();
+        menuSwitch.classList.toggle('on');
+    }
+}
+
+function toggleActiveScreen(screenName) {
+    activeScreen = screenName;
+    screenTextInner.forEach(text => text.textContent = ""); //Clear out screen text
+    if (screenName === "nowPlaying") {
+        playlistContainer.classList.remove('active');
+        updateNowPlaying();
+    } else if (screenName === "playlist") {
+        renderPlaylist();
+        playlistContainer.classList.add('active');
+        cycleScreenText(0); // reset the text to "now playing"
+        screenTextInner[0].textContent = "Choose a track";
+    }
+}
+
+function renderPlaylist() {
+    playlistContainer.innerHTML = ''; // Clear existing playlist
+    tracks.forEach((track, index) => {
+        const item = document.createElement('div');
+        item.classList.add('playlist-item');
+        item.textContent = `${track.title} - ${track.artist}`;
+        item.addEventListener('click', () => selectTrack(index));
+        playlistContainer.appendChild(item);
+    });
+    updatePlaylistHighlight();
+}
+
+function selectTrack(index) {
+    if (powerOn) {
+        currentTrackIndex = index;
+        stopTimer();
+        updateBottomDisplay(0);
+        loadAudio();
+        if (isPlaying) {
+            audio.play();
+            startTimer();
+        }
+        updateNowPlaying();
+        updatePlaylistHighlight();
+        triggerHapticFeedback();
+    }
+}
+
+function updatePlaylistHighlight() {
+    const playlistItems = document.querySelectorAll('.playlist-item');
+    playlistItems.forEach((item, index) => {
+        if (index === currentTrackIndex) {
+            item.classList.add('active');
+            // Center the selected item in the playlist
+            const itemHeight = item.offsetHeight;
+            const containerHeight = playlistContainer.offsetHeight;
+            const scrollPosition = item.offsetTop - (containerHeight / 2) + (itemHeight / 2);
+            playlistContainer.scrollTo({
+                top: scrollPosition,
+                behavior: 'smooth' // smooth scrolling animation
+            });
+        } else {
+            item.classList.remove('active');
+        }
+    });
+}
+
+// Function to handle cassette click animation and file import
+function importMusic() {
+    if (powerOn) {
+        cassetteDisplay.classList.add('importing'); // Start animation
+        document.getElementById('fileInput').click(); // Programmatically click the hidden file input
+        setTimeout(() => { // Remove animation class after it finishes
+            cassetteDisplay.classList.remove('importing');
+        }, 800); //Animation time
+        triggerHapticFeedback();
+    }
+}
+
+function handleFile(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function (e) {
+            const newTrack = {
+                title: file.name,
+                artist: "Unknown",
+                album: "Unknown",
+                duration: 0,
+                audioSrc: e.target.result
+            };
+            tracks.push(newTrack);
+            renderPlaylist();
+            menuToggle(); // Automatically open the Playlist
+            selectTrack(tracks.length - 1); // Select the newly added track
+        };
+        reader.readAsDataURL(file);
+    }
+}
+
+function updatePresetIndicators() {
+    const presetButtons = document.querySelectorAll('.control-button-small');
+    presetButtons.forEach(button => button.classList.remove('on')); // Clear all states
+    // Find the current preset index
+    let currentPresetIndex = -1;
+    if (bassLevel === 10 && midLevel === -5 && trebleLevel === 5) {
+        currentPresetIndex = 0;
+    } else if (bassLevel === -5 && midLevel === 10 && trebleLevel === -5) {
+        currentPresetIndex = 1;
+    } else if (bassLevel === 5 && midLevel === -5 && trebleLevel === 10) {
+        currentPresetIndex = 2;
+    } else if (bassLevel === 0 && midLevel === 0 && trebleLevel === 0) {
+        currentPresetIndex = 3;
+    }
+
+    if (currentPresetIndex !== -1) {
+        presetButtons[currentPresetIndex].classList.add('on'); // Activate current preset
+    }
+}
+
+function shuffleToggle() {
+    if (powerOn) {
+        shuffleOn = !shuffleOn;
+        shuffleSwitch.classList.toggle('on');
+        triggerHapticFeedback();
+    }
+}
+
+function repeatToggle() {
+    if (powerOn) {
+        repeatOn = !repeatOn;
+        repeatSwitch.classList.toggle('on');
+        triggerHapticFeedback();
+    }
+}
+
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", function () {
+    initializeAudioContext();
+    loadState();
+    renderPlaylist();
+    updateNowPlaying();
+    updateEqDisplay();
+    updatePlaylistHighlight();
+    updatePresetIndicators();
+});
+
+function updateNowPlaying() {
+    const screenText = document.querySelectorAll(".screen-text-inner");
+
+    // Update "Now Playing" screen with current song details
+    screenText[0].textContent = "Now Playing";
+    screenText[1].textContent = tracks[currentTrackIndex].title;  // Song Title
+    screenText[2].textContent = `${tracks[currentTrackIndex].artist} - ${tracks[currentTrackIndex].album}`;  // Artist & Album
+
+    // Apply active state for smooth transition
+    screenText[0].classList.add("active");
+    screenText[1].classList.add("active");
+    screenText[2].classList.add("active");
+}
+
+function saveState() {
+    const state = {
+        tracks: tracks.map(t => ({
+            title: t.title,
+            artist: t.artist,
+            album: t.album,
+            duration: t.duration,
+            audioSrc: t.audioSrc
+        })),
+        volume,
+        currentTrackIndex,
+        settings: {
+            bassLevel,
+            midLevel,
+            trebleLevel,
+            balanceLevel,
+            equalizerMode,
+            shuffleOn,
+            repeatOn
+        }
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadState() {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved) {
+        tracks = saved.tracks || [];
+        currentTrackIndex = saved.currentTrackIndex || 0;
+        volume = saved.volume || 0;
+        bassLevel = saved.settings.bassLevel;
+        midLevel = saved.settings.midLevel;
+        trebleLevel = saved.settings.trebleLevel;
+        balanceLevel = saved.settings.balanceLevel;
+        equalizerMode = saved.settings.equalizerMode;
+        shuffleOn = saved.settings.shuffleOn;
+        repeatOn = saved.settings.repeatOn;
+        updateVolumeDisplay();
+        updateNowPlaying();
+    }
+}
+
+// Show welcome message initially
+const screenText = document.querySelectorAll(".screen-text-inner");
+screenText[0].textContent = "Mixtape Memories";
+screenText[1].textContent = "Classic Cassette Music Player";
+screenText[2].textContent = "";
+
+// Apply welcome animation
+screenText[0].classList.add("welcome");
+screenText[1].classList.add("welcome");
+
+// After 3 seconds, reset the screen for Now Playing
+setTimeout(() => {
+    screenText[0].classList.remove("welcome");
+    screenText[1].classList.remove("welcome");
+
+    screenText[0].textContent = "Insert Cassette And Start Playing";
+    screenText[1].textContent = "";
+    screenText[2].textContent = "";
+
+    screenText[0].classList.add("active");
+}, 3000);
+
+// Save state on window close
+window.addEventListener('beforeunload', saveState);
 </script>
+
 </body>
 </html>
