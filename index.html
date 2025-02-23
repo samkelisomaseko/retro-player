@@ -1100,8 +1100,8 @@ const screen = document.querySelector('.screen');
 const cassetteDisplay = document.querySelector('.cassette-display'); // Get cassette display element
 const playButton = document.querySelector('.control-button:nth-child(2)');
 const recButton = document.querySelector('.control-button:nth-child(5)');
-const powerSwitch = document.querySelector('.toggle-switch:nth-child(1)')
-const menuSwitch = document.querySelector('.toggle-switch:nth-child(2)')
+const powerSwitch = document.querySelector('.toggle-switch:nth-child(1)');
+const menuSwitch = document.querySelector('.toggle-switch:nth-child(2)');
 const shuffleSwitch = document.querySelector('.toggle-switch:nth-child(3)');
 const repeatSwitch = document.querySelector('.toggle-switch:nth-child(4)');
 let currentIndex = 0;
@@ -1219,10 +1219,10 @@ function startTimer() {
     currentTimerTime = 0; // Reset the current timer time.
     updateBottomDisplay(currentTimerTime); //Initial display
     timerInterval = setInterval(() => {
-        if (isPlaying) {
-            currentTimerTime++;
+        if (isPlaying && audio) {
+            currentTimerTime = Math.floor(audio.currentTime);
             updateBottomDisplay(currentTimerTime);
-            if (currentTimerTime > tracks[currentTrackIndex].duration) {
+            if (currentTimerTime >= tracks[currentTrackIndex].duration) {
                 if (repeatOn) {
                     currentTimerTime = 0;
                     audio.currentTime = 0;
@@ -1280,6 +1280,7 @@ function loadAudio() {
         audio.volume = volume / 100;
         audio.addEventListener('loadedmetadata', () => {
             tracks[currentTrackIndex].duration = Math.floor(audio.duration);
+            updateNowPlaying(); // Update now playing after metadata is loaded
         });
         audio.addEventListener('ended', nextTrack); // Add listener for track end
         audio.addEventListener('error', (e) => {
@@ -1339,9 +1340,15 @@ function previousTrack() {
 function updateNowPlaying() {
     cycleScreenText(0);
     if (activeScreen === "nowPlaying") {
-        screenTextInner[0].textContent = tracks[currentTrackIndex].title;
-        screenTextInner[1].textContent = tracks[currentTrackIndex].artist;
-        screenTextInner[2].textContent = tracks[currentTrackIndex].album;
+        if (tracks.length > 0) {
+            screenTextInner[0].textContent = tracks[currentTrackIndex].title;
+            screenTextInner[1].textContent = tracks[currentTrackIndex].artist;
+            screenTextInner[2].textContent = tracks[currentTrackIndex].album;
+        } else {
+            screenTextInner[0].textContent = "No cassette found!";
+            screenTextInner[1].textContent = "Please insert one";
+            screenTextInner[2].textContent = "";
+        }
     }
 }
 
@@ -1393,7 +1400,7 @@ function updateEqualizerFilters() {
     if (audioContext && equalizerMode) {
         bassFilter.gain.value = bassLevel; // Adjust bass gain
         midFilter.gain.value = midLevel;    // Adjust mid gain
-        trebleFilter.gain.value = trebleLevel // Adjust treble gain
+        trebleFilter.gain.value = trebleLevel; // Adjust treble gain
         balanceGain.gain.value = 1 + (balanceLevel / 10);
     } else {
         bassFilter.gain.value = 0;
@@ -1503,6 +1510,13 @@ function powerToggle() {
 
 function menuToggle() {
     if (powerOn) {
+        if (tracks.length === 0) {
+            cycleScreenText(0);
+            screenTextInner[0].textContent = "No cassette found!";
+            screenTextInner[1].textContent = "Please insert one";
+            screenTextInner[2].textContent = "";
+            return;
+        }
         menuOpen = !menuOpen;
         toggleActiveScreen(menuOpen ? "playlist" : "nowPlaying");
         triggerHapticFeedback();
@@ -1651,62 +1665,6 @@ document.addEventListener("DOMContentLoaded", function () {
     updatePresetIndicators();
 });
 
-function updateNowPlaying() {
-    const screenText = document.querySelectorAll(".screen-text-inner");
-
-    // Update "Now Playing" screen with current song details
-    screenText[0].textContent = "Now Playing";
-    screenText[1].textContent = tracks[currentTrackIndex].title;  // Song Title
-    screenText[2].textContent = `${tracks[currentTrackIndex].artist} - ${tracks[currentTrackIndex].album}`;  // Artist & Album
-
-    // Apply active state for smooth transition
-    screenText[0].classList.add("active");
-    screenText[1].classList.add("active");
-    screenText[2].classList.add("active");
-}
-
-function saveState() {
-    const state = {
-        tracks: tracks.map(t => ({
-            title: t.title,
-            artist: t.artist,
-            album: t.album,
-            duration: t.duration,
-            audioSrc: t.audioSrc
-        })),
-        volume,
-        currentTrackIndex,
-        settings: {
-            bassLevel,
-            midLevel,
-            trebleLevel,
-            balanceLevel,
-            equalizerMode,
-            shuffleOn,
-            repeatOn
-        }
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-}
-
-function loadState() {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved) {
-        tracks = saved.tracks || [];
-        currentTrackIndex = saved.currentTrackIndex || 0;
-        volume = saved.volume || 0;
-        bassLevel = saved.settings.bassLevel;
-        midLevel = saved.settings.midLevel;
-        trebleLevel = saved.settings.trebleLevel;
-        balanceLevel = saved.settings.balanceLevel;
-        equalizerMode = saved.settings.equalizerMode;
-        shuffleOn = saved.settings.shuffleOn;
-        repeatOn = saved.settings.repeatOn;
-        updateVolumeDisplay();
-        updateNowPlaying();
-    }
-}
-
 // Show welcome message initially
 const screenText = document.querySelectorAll(".screen-text-inner");
 screenText[0].textContent = "Mixtape Memories";
@@ -1731,7 +1689,151 @@ setTimeout(() => {
 
 // Save state on window close
 window.addEventListener('beforeunload', saveState);
+
+// Recording functionality
+const mediaStreamDestination = audioContext.createMediaStreamDestination();
+const mediaRecorder = new MediaRecorder(mediaStreamDestination.stream);
+const recordedChunks = [];
+
+mediaRecorder.ondataavailable = event => {
+    if (event.data.size > 0) recordedChunks.push(event.data);
+};
+
+mediaRecorder.onstop = () => {
+    const audio = new Audio();
+    const blob = new Blob(recordedChunks, { type: 'audio/wav' });
+    audio.src = URL.createObjectURL(blob);
+    const newTrack = {
+        title: "Recording",
+        artist: "Unknown",
+        album: "Unknown",
+        duration: 0,
+        audioSrc: audio.src
+    };
+    tracks.push(newTrack);
+    renderPlaylist();
+    menuToggle(); // Automatically open the Playlist
+    selectTrack(tracks.length - 1); // Select the newly added track
+    recordedChunks.length = 0; // Clear recorded chunks
+};
+
+function toggleRecordMode() {
+    if (powerOn) {
+        isRecordMode = !isRecordMode;
+        triggerHapticFeedback();
+        if (isRecordMode) {
+            mediaRecorder.start();
+            screenTextInner[0].textContent = "Recording...";
+            screenTextInner[1].textContent = "Rec Mode";
+            screenTextInner[2].textContent = "";
+            stopTimer();
+            updateBottomDisplay(0);
+            cycleScreenText(0);
+            recButton.classList.add('on');
+        } else {
+            mediaRecorder.stop();
+            updateNowPlaying();
+            recButton.classList.remove('on');
+        }
+    }
+}
+
+// Function to save state
+function saveState() {
+    const state = {
+        tracks: tracks.map(t => ({
+            title: t.title,
+            artist: t.artist,
+            album: t.album,
+            duration: t.duration,
+            audioSrc: t.audioSrc
+        })),
+        volume,
+        currentTrackIndex,
+        settings: {
+            bassLevel,
+            midLevel,
+            trebleLevel,
+            balanceLevel,
+            equalizerMode,
+            shuffleOn,
+            repeatOn
+        }
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+// Function to load state
+function loadState() {
+    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
+    if (saved) {
+        tracks = saved.tracks || [];
+        currentTrackIndex = saved.currentTrackIndex || 0;
+        volume = saved.volume || 0;
+        bassLevel = saved.settings.bassLevel;
+        midLevel = saved.settings.midLevel;
+        trebleLevel = saved.settings.trebleLevel;
+        balanceLevel = saved.settings.balanceLevel;
+        equalizerMode = saved.settings.equalizerMode;
+        shuffleOn = saved.settings.shuffleOn;
+        repeatOn = saved.settings.repeatOn;
+        updateVolumeDisplay();
+        updateNowPlaying();
+    }
+}
+
+// Recording stream
+function connectTrackToMediaRecorder() {
+    if (audio && mediaRecorder && mediaRecorder.state === 'inactive') {
+        const trackSource = audioContext.createMediaElementSource(audio);
+        trackSource.connect(mediaStreamDestination);
+    }
+}
+
+// Ensure audio plays correctly
+function handleAudioPlay() {
+    if (audio) {
+        connectTrackToMediaRecorder();
+    }
+}
+
+// Load audio with metadata extraction
+function loadAudio() {
+    if (!tracks[currentTrackIndex] || !tracks[currentTrackIndex].audioSrc) {
+        console.error("Error: No audio source for track", currentTrackIndex);
+        audio = null;
+        return;
+    }
+    try {
+        if (audio) {
+            audio.pause();
+            audio.removeEventListener('ended', nextTrack); // Remove old listener
+            audio.removeEventListener('play', handleAudioPlay); // Remove old listener
+            audio.currentTime = 0; //Reset audio playback
+        }
+        audio = new Audio(tracks[currentTrackIndex].audioSrc); // Create new audio object
+        audio.volume = volume / 100;
+        audio.addEventListener('loadedmetadata', () => {
+            tracks[currentTrackIndex].duration = Math.floor(audio.duration);
+            updateNowPlaying(); // Update now playing after metadata is loaded
+        });
+        audio.addEventListener('ended', nextTrack); // Add listener for track end
+        audio.addEventListener('play', handleAudioPlay); // Add listener for play
+        audio.addEventListener('error', (e) => {
+            console.error('Audio load error:', e);
+            audio = null; //Reset audio to null when error happens
+        });
+        if (audioContext) {
+            connectAudioToAnalyser(); // Connect the audio source to the analyser
+            updateEqualizerFilters();
+        }
+    } catch (e) {
+        audio = null; //Set audio null if something goes wrong
+        console.error("Error loading audio:", e);
+    }
+}
 </script>
+
 
 </body>
 </html>
