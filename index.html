@@ -982,6 +982,7 @@
      box-shadow: 0 0 4px 1px #ff6a00;
 }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jsmediatags/3.9.7/jsmediatags.min.js"></script>
 </head>
 <body>
     <div class="device-container">
@@ -1089,7 +1090,10 @@
              <input type="file" id="fileInput" accept="audio/*" style="display: none;" onchange="handleFile(event)"> <!-- Hidden file input -->
        </div>
     </div>
-    <script>
+    
+     
+
+ <script>
        const screenTextInner = document.querySelectorAll(".screen-text-inner");
           const bottomDisplay = document.querySelector('.bottom-display');
           const eqDisplay = document.querySelector('.equalizer-display');
@@ -1128,36 +1132,7 @@
           let playlistRendered = false;
            let currentTimerTime = 0; // Track the timer time to make more reliable
            let bassFilter, midFilter, trebleFilter, balanceGain;
-            let tracks = [
-            {
-                title: "Track 1",
-                artist: "Artist A",
-                album: "Album X",
-                duration: 180,
-                audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3" // <- Replace with actual file path or make sure an audio file with the name is in same directory
-            },
-             {
-                title: "Track 2",
-                artist: "Artist B",
-                album: "Album Y",
-                duration: 240,
-                audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3"// <- Replace with actual file path or make sure an audio file with the name is in same directory
-            },
-            {
-                title: "Track 3",
-                artist: "Artist C",
-                album: "Album Z",
-                duration: 210,
-                audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3" // <- Replace with actual file path or make sure an audio file with the name is in same directory
-             },
-             {
-                title: "Tattoo",
-                artist: "Loreen",
-                album: "Singles",
-                duration: 192,
-                audioSrc: "Loreen_-_Tattoo__Official_Audio_(256k).mp3"
-             }
-           ];
+            let tracks = [];
       // Function to trigger haptic feedback (if supported)
         function triggerHapticFeedback() {
           if (navigator.vibrate) {
@@ -1256,7 +1231,7 @@
                 if (isPlaying) {
                     currentTimerTime++;
                     updateBottomDisplay(currentTimerTime);
-                     if (currentTimerTime > tracks[currentTrackIndex].duration) {
+                     if (audio && currentTimerTime > audio.duration) {
                          if(repeatOn){
                            currentTimerTime = 0;
                            audio.currentTime = 0;
@@ -1303,7 +1278,7 @@
            }
          }
 
-       function loadAudio() {
+       async function loadAudio() {
            if (!tracks[currentTrackIndex] || !tracks[currentTrackIndex].audioSrc) {
                 console.error("Error: No audio source for track", currentTrackIndex);
                 audio = null;
@@ -1313,6 +1288,7 @@
                 if(audio) {
                  audio.pause();
                 audio.removeEventListener('ended', nextTrack); // Remove old listener
+                audio.removeEventListener('timeupdate', updateNotification);
                 audio.currentTime = 0; //Reset audio playback
             }
                audio = new Audio(tracks[currentTrackIndex].audioSrc); // Create new audio object
@@ -1322,10 +1298,17 @@
                         console.error('Audio load error:', e);
                         audio = null; //Reset audio to null when error happens
                 });
+
+                 audio.addEventListener('loadedmetadata', () => {
+                    // Audio duration is now available
+                   });
+                audio.addEventListener('timeupdate', updateNotification);
+
                 if (audioContext) {
                     connectAudioToAnalyser(); // Connect the audio source to the analyser
                       updateEqualizerFilters()
                 }
+             updateNotification();
 
 
            }catch(e){
@@ -1379,9 +1362,9 @@
     function updateNowPlaying() {
             cycleScreenText(0);
              if(activeScreen == "nowPlaying") {
-                 screenTextInner[0].textContent = tracks[currentTrackIndex].title;
-                screenTextInner[1].textContent = tracks[currentTrackIndex].artist;
-                screenTextInner[2].textContent = tracks[currentTrackIndex].album;
+                  screenTextInner[0].textContent = "Now Playing";
+                 screenTextInner[1].textContent = tracks[currentTrackIndex].title || "Unknown Title";
+                screenTextInner[2].textContent = (tracks[currentTrackIndex].artist || "Unknown Artist") + " - " + (tracks[currentTrackIndex].album || "Unknown Album");
                }
     }
     function setPreset(preset) {
@@ -1548,30 +1531,28 @@
 
     function toggleActiveScreen(screenName){
            activeScreen = screenName
-          screenTextInner.forEach(text => text.textContent = ""); //Clear out screen text
-           if(screenName == "nowPlaying") {
+          screenTextInner.forEach(text => text.classList.remove('active')); //Clear out screen text
+          if(screenName == "nowPlaying") {
               playlistContainer.classList.remove('active');
-                updateNowPlaying();
+              updateNowPlaying();
+             cycleScreenText(0);
           } else if(screenName == "playlist") {
-                 renderPlaylist();
-               playlistContainer.classList.add('active');
-             cycleScreenText(0); // reset the text to "now playing"
-             screenTextInner[0].textContent = "Choose a track"
-         }
+              renderPlaylist();
+              playlistContainer.classList.add('active');
+              screenTextInner[0].textContent = "Choose a track"
+               cycleScreenText(0);
+
+          }
      }
 
     function renderPlaylist() {
-            if (playlistRendered) {
-                updatePlaylistHighlight();
-                return;
-            } // Prevent re-rendering if already done
         playlistContainer.innerHTML = ''; // Clear existing playlist
         tracks.forEach((track, index) => {
             const item = document.createElement('div');
             item.classList.add('playlist-item');
-            item.textContent = track.title;
+            item.textContent = track.title || "Unknown Title"; // Use title or "Unknown Title"
             item.addEventListener('click', () => selectTrack(index));
-             playlistContainer.appendChild(item);
+            playlistContainer.appendChild(item);
         });
          updatePlaylistHighlight();
         playlistRendered = true;
@@ -1623,26 +1604,81 @@
          }
 
     }
-  function handleFile(event) {
-         const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-              const newTrack = {
-                  title: file.name,
-                    artist: "Unknown",
-                    album: "Unknown",
-                    duration: 300,
-                    audioSrc: e.target.result
-                };
-               tracks.push(newTrack);
-               if (menuOpen && activeScreen == "playlist"){
-                renderPlaylist()
-               }
-            };
-            reader.readAsDataURL(file);
-       }
+  async function handleFile(event) {
+    const file = event.target.files[0];
+    if (file) {
+        try {
+            const url = URL.createObjectURL(file);
+
+            // Use jsmediatags to read metadata
+            jsmediatags.read(file, {
+                onSuccess: function(tag) {
+                    const tags = tag.tags;
+                    const title = tags.title || file.name;
+                    const artist = tags.artist || "Unknown";
+                    const album = tags.album || "Unknown";
+
+                    // Create the new track object
+                    const newTrack = {
+                        title: title,
+                        artist: artist,
+                        album: album,
+                        audioSrc: url
+                    };
+
+                    tracks.push(newTrack);
+                   saveState();
+
+                    // Render playlist and auto-open it
+                    renderPlaylist();
+                    toggleActiveScreen("playlist");
+
+                    // Update "Now Playing" information if it's the first track
+                    if (tracks.length === 1) {
+                        currentTrackIndex = 0;
+                         loadAudio()
+                        updateNowPlaying();
+                    }
+
+                    // Clean up URL object
+                    URL.revokeObjectURL(url);
+                   updateNotification();
+                },
+                onError: function(error) {
+                    console.error("Failed to read metadata: ", error);
+
+                    // Fallback if metadata reading fails
+                    const newTrack = {
+                        title: file.name,
+                        artist: "Unknown",
+                        album: "Unknown",
+                        audioSrc: url
+                    };
+
+                    tracks.push(newTrack);
+                  saveState();
+
+                    // Render playlist and auto-open it
+                    renderPlaylist();
+                    toggleActiveScreen("playlist");
+
+                    // Update "Now Playing" information if it's the first track
+                    if (tracks.length === 1) {
+                        currentTrackIndex = 0;
+                        loadAudio()
+                        updateNowPlaying();
+                    }
+
+                    // Clean up URL object
+                    URL.revokeObjectURL(url);
+                   updateNotification();
+                }
+            });
+        } catch (error) {
+            console.error("Error handling file: ", error);
+        }
     }
+}
    function updatePresetIndicators() {
         const presetButtons = document.querySelectorAll('.control-button-small');
         presetButtons.forEach(button => button.classList.remove('on')); // Clear all states
@@ -1676,61 +1712,98 @@
             triggerHapticFeedback();
         }
     }
-    //Initialize on page load
-   initializeAudioContext();
-   updateNowPlaying()
-   updateEqDisplay()
-   updatePlaylistHighlight()
-    updatePresetIndicators()
+    function saveState() {
+        const state = {
+            tracks: tracks.map(track => ({
+                title: track.title,
+                artist: track.artist,
+                album: track.album,
+                audioSrc: track.audioSrc
+            })),
+            currentTrackIndex: currentTrackIndex,
+            volume: volume,
+            bassLevel: bassLevel,
+            midLevel: midLevel,
+            trebleLevel: trebleLevel,
+            balanceLevel:balanceLevel,
+            equalizerMode: equalizerMode,
+            shuffleOn: shuffleOn,
+            repeatOn: repeatOn
+        };
+        localStorage.setItem('cassettePlayerState', JSON.stringify(state));
+    }
+   function loadState() {
+    const storedState = localStorage.getItem('cassettePlayerState');
+    if (storedState) {
+        const state = JSON.parse(storedState);
 
-         // Local Storage Integration
-        const STORAGE_KEY = 'cassettePlayerState';
+        // Load tracks and their metadata
+        tracks = state.tracks.map(track => ({
+            title: track.title,
+            artist: track.artist,
+            album: track.album,
+            audioSrc: track.audioSrc
+        }));
 
-        function saveState() {
-            const state = {
-                tracks: tracks.map(t => ({
-                    title: t.title,
-                    artist: t.artist,
-                    album: t.album,
-                    duration: t.duration,
-                    audioSrc: t.audioSrc
-                })),
-                volume,
-                currentTrackIndex,
-                settings: {
-                    bassLevel,
-                    midLevel,
-                    trebleLevel,
-                    balanceLevel,
-                    equalizerMode,
-                    shuffleOn,
-                    repeatOn
-                }
-            };
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-        }
+        currentTrackIndex = state.currentTrackIndex || 0;
+        volume = state.volume || 50;
+        bassLevel = state.bassLevel || 0;
+        midLevel = state.midLevel || 0;
+        trebleLevel = state.trebleLevel || 0;
+        balanceLevel = state.balanceLevel || 0;
+        equalizerMode = state.equalizerMode || false;
+        shuffleOn = state.shuffleOn || false;
+        repeatOn = state.repeatOn || false;
+        updateVolumeDisplay();
+        updateNowPlaying();
+         updatePresetIndicators()
+        updateEqDisplay()
 
-        function loadState() {
-            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-            if (saved) {
-                tracks = saved.tracks || [];
-                currentTrackIndex = saved.currentTrackIndex || 0;
-                volume = saved.volume || 0;
-                Object.assign(bassLevel, saved.settings.bassLevel);
-                Object.assign(midLevel, saved.settings.midLevel);
-                Object.assign(trebleLevel, saved.settings.trebleLevel);
-                shuffleOn = saved.settings.shuffleOn;
-                repeatOn = saved.settings.repeatOn;
-                updateVolumeDisplay();
-                updateNowPlaying();
-            }
-        }
 
+    }
+}
+
+// Notification API
+function updateNotification() {
+  if (!('mediaSession' in navigator)) {
+    console.log('Media Session API is not supported.');
+    return;
+  }
+
+  const currentTrack = tracks[currentTrackIndex];
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: currentTrack.title,
+    artist: currentTrack.artist,
+    album: currentTrack.album,
+    artwork: [
+      { src: 'cassette.jpg', sizes: '96x96', type: 'image/png' }, // Replace with real URLs
+      { src: 'cassette.jpg', sizes: '128x128', type: 'image/png' },
+      { src: 'cassette.jpg', sizes: '192x192', type: 'image/png' },
+      { src: 'cassette.jpg', sizes: '256x256', type: 'image/png' },
+      { src: 'cassette.jpg', sizes: '384x384', type: 'image/png' },
+      { src: 'cassette.jpg', sizes: '512x512', type: 'image/png' },
+    ]
+  });
+
+  navigator.mediaSession.setActionHandler('play', function() {
+      togglePlayPause();
+  });
+  navigator.mediaSession.setActionHandler('pause', function() {
+      togglePlayPause();
+  });
+  navigator.mediaSession.setActionHandler('previoustrack', function() {
+    previousTrack()
+  });
+  navigator.mediaSession.setActionHandler('nexttrack', function() {
+   nextTrack()
+  });
+}
         document.addEventListener("DOMContentLoaded", function () {
     const screenText = document.querySelectorAll(".screen-text-inner");
 
     // Show welcome message initially
-    screenText[0].textContent = "Welcome To shamase.co";
+    screenText[0].textContent = "Mixtape Memories";
     screenText[1].textContent = "Classic Cassette Music Player";
     screenText[2].textContent = "";
 
@@ -1743,50 +1816,21 @@
         screenText[0].classList.remove("welcome");
         screenText[1].classList.remove("welcome");
 
-        screenText[0].textContent = "Start Playing";
+        screenText[0].textContent = "Insert Cassette And Start Playing";
         screenText[1].textContent = "";
         screenText[2].textContent = "";
+       cycleScreenText(0)
 
         screenText[0].classList.add("active");
     }, 3000);
-});
 
-function updateNowPlaying() {
-    const screenText = document.querySelectorAll(".screen-text-inner");
+     loadState();
+     updateNotification();
 
-    // Update "Now Playing" screen with current song details
-    screenText[0].textContent = "Now Playing";
-    screenText[1].textContent = tracks[currentTrackIndex].title;  // Song Title
-    screenText[2].textContent = `${tracks[currentTrackIndex].artist} - ${tracks[currentTrackIndex].album}`;  // Artist & Album
 
-    // Apply active state for smooth transition
-    screenText[0].classList.add("active");
-    screenText[1].classList.add("active");
-    screenText[2].classList.add("active");
-}
+     });
 
-function togglePlayPause() {
-    if (powerOn) {
-        isPlaying = !isPlaying;
-        triggerHapticFeedback();
 
-        if (isPlaying) {
-            if (!audio) {
-                loadAudio(); // Load audio if not already loaded
-            }
-            audio.play();
-            startTimer();
-            playButton.classList.add('on');
-            updateNowPlaying(); // Show current song when play starts
-        } else {
-            if (audio) {
-                audio.pause();
-            }
-            stopTimer();
-            playButton.classList.remove('on');
-        }
-    }
-} 
 </script>
 </body>
 </html>
